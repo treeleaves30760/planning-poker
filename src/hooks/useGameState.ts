@@ -11,6 +11,10 @@ export function useGameState(gameId: string) {
       const response = await fetch(`/api/games/${gameId}`);
       if (response.ok) {
         const gameData = await response.json();
+        // Migration: Add completedTasks if it doesn't exist
+        if (!gameData.completedTasks) {
+          gameData.completedTasks = [];
+        }
         setGame(gameData);
         setError(null);
       } else {

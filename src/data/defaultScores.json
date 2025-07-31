@@ -1,17 +1,17 @@
 {
-  "uncertainty": {
-    "low": 1,
-    "mid": 3,
-    "high": 5
-  },
-  "complexity": {
-    "low": 1,
-    "mid": 3,
-    "high": 5
-  },
-  "effort": {
-    "low": 1,
-    "mid": 3,
-    "high": 5
-  }
+	"uncertainty": {
+		"low": 2,
+		"mid": 3,
+		"high": 5
+	},
+	"complexity": {
+		"low": 1,
+		"mid": 1,
+		"high": 2
+	},
+	"effort": {
+		"low": 1,
+		"mid": 2,
+		"high": 3
+	}
 }

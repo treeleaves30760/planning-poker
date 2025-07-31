@@ -37,6 +37,7 @@ export interface Task {
   votes: Vote[];
   revealed: boolean;
   allowChanges: boolean;
+  completedAt?: Date;
 }
 
 export interface Game {
@@ -47,6 +48,7 @@ export interface Game {
   users: User[];
   currentTask: Task | null;
   tasks: Task[];
+  completedTasks: Task[];
   isActive: boolean;
   createdAt: Date;
 }
