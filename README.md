@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Story Point Party 🎯
 
-## Getting Started
+A collaborative task difficulty estimation tool for agile teams. Story Point Party enables distributed teams to conduct story point estimation sessions where members vote on task uncertainty, complexity, and effort levels in real-time.
 
-First, run the development server:
+## Features
 
+- **Multi-dimensional Scoring**: Rate tasks on uncertainty, complexity, and effort
+- **Real-time Collaboration**: Multiple users can join and vote simultaneously
+- **Admin Controls**: Manage estimation sessions with reveal/change controls
+- **Cross-device Support**: Works across devices on the same network
+- **Customizable Scoring**: Configure your own scoring values or use defaults
+- **Anonymous Voting**: Votes are hidden until admin reveals results
+
+## Quick Start
+
+1. **Install dependencies:**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Start the development server:**
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Open your browser:**
+Visit [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How to Use
 
-## Learn More
+### For Admins (Session Leaders)
 
-To learn more about Next.js, take a look at the following resources:
+1. **Setup Game**: Go to `/admin` to configure scoring and create a new game
+2. **Share Join Link**: Copy the join URL from the admin panel and share with team
+3. **Add Tasks**: Enter task descriptions for estimation
+4. **Manage Voting**: Reveal votes, allow changes, and move to next tasks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### For Team Members
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Join Game**: Use the shared link to join with your username
+2. **Vote on Tasks**: Rate each task on uncertainty, complexity, and effort
+3. **See Results**: View everyone's votes when admin reveals them
+4. **Participate**: Join/leave sessions anytime during the meeting
 
-## Deploy on Vercel
+### Network Access
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+To allow team members on different devices to join:
+1. Find your computer's IP address (usually `192.168.x.x`)
+2. Share: `http://[YOUR-IP]:3000/game/[gameId]/join`
+3. Team members can join from phones, tablets, or other computers
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Technical Details
+
+Built with modern web technologies:
+- **Next.js 15** with App Router
+- **TypeScript** for type safety
+- **React 19** for UI components
+- **Tailwind CSS 4** for styling
+- **File-based API** for game state management
+
+## Development Commands
+
+```bash
+# Development
+npm run dev          # Start development server with Turbopack
+npm run build        # Create production build
+npm run start        # Run production server
+npm run lint         # Run ESLint for code quality
+
+# Installation
+npm install          # Install dependencies
+```
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── admin/                    # Admin setup page
+│   ├── game/[gameId]/
+│   │   ├── admin/               # Admin control panel
+│   │   ├── join/                # User join page
+│   │   └── play/                # User voting interface
+│   └── api/games/               # Game state API endpoints
+├── hooks/
+│   └── useGameState.ts          # Game state management hook
+├── types/
+│   └── game.ts                  # TypeScript interfaces
+└── data/
+    └── defaultScores.json       # Default scoring configuration
+```
+
+## Contributing
+
+This project uses standard Next.js patterns and TypeScript. See `CLAUDE.md` for detailed development guidance.
+
+## License
+
+MIT License - feel free to use this for your team's estimation sessions!

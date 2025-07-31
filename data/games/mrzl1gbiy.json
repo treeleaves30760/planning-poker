@@ -1,0 +1,52 @@
+{
+  "id": "mrzl1gbiy",
+  "name": "New Game",
+  "adminId": "woc0c8qfv",
+  "scoreConfig": {
+    "uncertainty": {
+      "low": 1,
+      "mid": 3,
+      "high": 5
+    },
+    "complexity": {
+      "low": 1,
+      "mid": 3,
+      "high": 5
+    },
+    "effort": {
+      "low": 1,
+      "mid": 3,
+      "high": 5
+    }
+  },
+  "users": [
+    {
+      "id": "7fqe3k3xh",
+      "username": "Test User",
+      "isAdmin": false
+    },
+    {
+      "id": "u2efeuk2u",
+      "username": "User2",
+      "isAdmin": false
+    }
+  ],
+  "currentTask": {
+    "id": "p6r4enp98",
+    "description": "Hello",
+    "votes": [],
+    "revealed": false,
+    "allowChanges": false
+  },
+  "tasks": [
+    {
+      "id": "p6r4enp98",
+      "description": "Hello",
+      "votes": [],
+      "revealed": false,
+      "allowChanges": false
+    }
+  ],
+  "isActive": true,
+  "createdAt": "2025-07-31T10:30:49.703Z"
+}
