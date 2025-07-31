@@ -4,11 +4,14 @@ A collaborative task difficulty estimation tool for agile teams. Story Point Par
 
 ## Features
 
-- **Multi-dimensional Scoring**: Rate tasks on uncertainty, complexity, and effort
+- **Fibonacci Scoring System**: Advanced combination-based scoring using Fibonacci sequence (1, 2, 3, 5, 8, 13, 21)
+- **Multi-dimensional Scoring**: Rate tasks on uncertainty, complexity, and effort with 27 possible combinations
+- **Real-time Score Display**: See your current selection score update instantly as you vote
 - **Real-time Collaboration**: Multiple users can join and vote simultaneously
 - **Admin Controls**: Manage estimation sessions with reveal/change controls
 - **Cross-device Support**: Works across devices on the same network
-- **Customizable Scoring**: Configure your own scoring values or use defaults
+- **Dual Scoring Systems**: Choose between Fibonacci (recommended) or Legacy additive scoring
+- **Task History**: Complete tracking of all completed tasks with statistics
 - **Anonymous Voting**: Votes are hidden until admin reveals results
 
 ## Quick Start
@@ -30,17 +33,24 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ### For Admins (Session Leaders)
 
-1. **Setup Game**: Go to `/admin` to configure scoring and create a new game
-2. **Share Join Link**: Copy the join URL from the admin panel and share with team
-3. **Add Tasks**: Enter task descriptions for estimation
-4. **Manage Voting**: Reveal votes, allow changes, and move to next tasks
+1. **Choose Scoring System**: 
+   - **Fibonacci Scoring** (Recommended): `/admin-fibonacci` - Advanced combination-based scoring
+   - **Legacy Scoring**: `/admin` - Simple additive scoring
+2. **Configure Scoring**: Set up your preferred scoring values (27 combinations for Fibonacci)
+3. **Create Game**: Enter game name and generate game session
+4. **Share Join Link**: Copy the join URL from the admin panel and share with team
+5. **Add Tasks**: Enter task descriptions for estimation
+6. **Manage Voting**: Reveal votes, allow changes, and move to next tasks
+7. **View History**: Track all completed tasks with statistics and averages
 
 ### For Team Members
 
 1. **Join Game**: Use the shared link to join with your username
 2. **Vote on Tasks**: Rate each task on uncertainty, complexity, and effort
-3. **See Results**: View everyone's votes when admin reveals them
-4. **Participate**: Join/leave sessions anytime during the meeting
+3. **Real-time Feedback**: See your current selection score update instantly
+4. **See Results**: View everyone's votes when admin reveals them
+5. **Task History**: Review all previous tasks and their outcomes
+6. **Participate**: Join/leave sessions anytime during the meeting
 
 ### Network Access
 
@@ -48,6 +58,21 @@ To allow team members on different devices to join:
 1. Find your computer's IP address (usually `192.168.x.x`)
 2. Share: `http://[YOUR-IP]:3000/game/[gameId]/join`
 3. Team members can join from phones, tablets, or other computers
+
+## Scoring Systems
+
+### Fibonacci Scoring (Recommended)
+- **27 Combinations**: Every combination of uncertainty × complexity × effort has a pre-configured Fibonacci score
+- **Fibonacci Values**: Uses 1, 2, 3, 5, 8, 13, 21 for intuitive story point estimation
+- **Real-time Preview**: See your score instantly as you make selections
+- **Customizable**: Admin can modify any of the 27 combination scores
+- **Example**: Low uncertainty + High complexity + Mid effort = 8 points
+
+### Legacy Scoring
+- **Additive System**: Final score = uncertainty + complexity + effort scores
+- **Simple Configuration**: Set individual dimension scores (low/mid/high)
+- **Backward Compatible**: Supports existing games and familiar workflows
+- **Example**: Uncertainty(2) + Complexity(3) + Effort(1) = 6 points
 
 ## Technical Details
 
@@ -76,7 +101,8 @@ npm install          # Install dependencies
 ```
 src/
 ├── app/
-│   ├── admin/                    # Admin setup page
+│   ├── admin/                    # Legacy admin setup page
+│   ├── admin-fibonacci/          # Fibonacci scoring admin setup
 │   ├── game/[gameId]/
 │   │   ├── admin/               # Admin control panel
 │   │   ├── join/                # User join page
@@ -86,8 +112,11 @@ src/
 │   └── useGameState.ts          # Game state management hook
 ├── types/
 │   └── game.ts                  # TypeScript interfaces
+├── utils/
+│   └── scoreCalculation.ts      # Scoring system utilities
 └── data/
-    └── defaultScores.json       # Default scoring configuration
+    ├── defaultScores.json       # Legacy scoring configuration
+    └── defaultFibonacciScores.json # Fibonacci scoring configuration
 ```
 
 ## Contributing
