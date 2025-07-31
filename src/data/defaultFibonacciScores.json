@@ -1,0 +1,31 @@
+{
+  "combinations": {
+    "low-low-low": 1,
+    "low-low-mid": 2,
+    "low-low-high": 3,
+    "low-mid-low": 2,
+    "low-mid-mid": 3,
+    "low-mid-high": 5,
+    "low-high-low": 3,
+    "low-high-mid": 5,
+    "low-high-high": 8,
+    "mid-low-low": 2,
+    "mid-low-mid": 3,
+    "mid-low-high": 5,
+    "mid-mid-low": 3,
+    "mid-mid-mid": 5,
+    "mid-mid-high": 8,
+    "mid-high-low": 5,
+    "mid-high-mid": 8,
+    "mid-high-high": 13,
+    "high-low-low": 3,
+    "high-low-mid": 5,
+    "high-low-high": 8,
+    "high-mid-low": 5,
+    "high-mid-mid": 8,
+    "high-mid-high": 13,
+    "high-high-low": 8,
+    "high-high-mid": 13,
+    "high-high-high": 21
+  }
+}

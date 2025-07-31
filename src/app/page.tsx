@@ -15,10 +15,17 @@ export default function Home() {
 
         <div className="bg-white shadow-md rounded-lg p-6 space-y-4">
           <Link
-            href="/admin"
+            href="/admin-fibonacci"
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            Create New Game (Admin)
+            Create New Game - Fibonacci Scoring (Recommended)
+          </Link>
+          
+          <Link
+            href="/admin"
+            className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Create New Game - Legacy Scoring
           </Link>
           
           <div className="text-center text-gray-500">

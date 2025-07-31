@@ -1,18 +1,23 @@
 export interface ScoreConfig {
-  uncertainty: {
+  // Legacy format for backward compatibility
+  uncertainty?: {
     low: number;
     mid: number;
     high: number;
   };
-  complexity: {
+  complexity?: {
     low: number;
     mid: number;
     high: number;
   };
-  effort: {
+  effort?: {
     low: number;
     mid: number;
     high: number;
+  };
+  // New combination-based scoring system
+  combinations?: {
+    [key: string]: number; // Key format: "uncertainty-complexity-effort" (e.g., "low-mid-high")
   };
 }
 

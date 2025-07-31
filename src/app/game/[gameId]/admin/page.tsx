@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Task, Vote } from "@/types/game";
 import { useGameState } from "@/hooks/useGameState";
+import { getScoreForVote } from "@/utils/scoreCalculation";
 
 export default function AdminGamePage() {
 	const params = useParams();
@@ -82,14 +83,9 @@ export default function AdminGamePage() {
 		setTaskDescription("");
 	};
 
-	const getScoreForVote = (vote: Vote) => {
+	const getVoteScore = (vote: Vote) => {
 		if (!game) return 0;
-		const { scoreConfig } = game;
-		return (
-			scoreConfig.uncertainty[vote.uncertainty] +
-			scoreConfig.complexity[vote.complexity] +
-			scoreConfig.effort[vote.effort]
-		);
+		return getScoreForVote(vote, game.scoreConfig);
 	};
 
 	if (isLoading) {
@@ -265,8 +261,7 @@ export default function AdminGamePage() {
 												<td className="text-center">
 													{game.currentTask?.revealed ? (
 														<span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
-															{vote.uncertainty} (
-															{game.scoreConfig.uncertainty[vote.uncertainty]})
+															{vote.uncertainty}
 														</span>
 													) : (
 														<span className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-sm">
@@ -277,8 +272,7 @@ export default function AdminGamePage() {
 												<td className="text-center">
 													{game.currentTask?.revealed ? (
 														<span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
-															{vote.complexity} (
-															{game.scoreConfig.complexity[vote.complexity]})
+															{vote.complexity}
 														</span>
 													) : (
 														<span className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-sm">
@@ -289,8 +283,7 @@ export default function AdminGamePage() {
 												<td className="text-center">
 													{game.currentTask?.revealed ? (
 														<span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm">
-															{vote.effort} (
-															{game.scoreConfig.effort[vote.effort]})
+															{vote.effort}
 														</span>
 													) : (
 														<span className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-sm">
@@ -300,7 +293,7 @@ export default function AdminGamePage() {
 												</td>
 												<td className="text-center font-bold">
 													{game.currentTask?.revealed
-														? getScoreForVote(vote)
+														? getVoteScore(vote)
 														: "?"}
 												</td>
 											</tr>
@@ -334,7 +327,7 @@ export default function AdminGamePage() {
 										{game.completedTasks.length > 0 ? Math.round(
 											game.completedTasks.reduce((taskSum, task) => 
 												taskSum + (task.votes.length > 0 ? 
-													task.votes.reduce((voteSum, vote) => voteSum + getScoreForVote(vote), 0) / task.votes.length : 0
+													task.votes.reduce((voteSum, vote) => voteSum + getVoteScore(vote), 0) / task.votes.length : 0
 												), 0) / game.completedTasks.length * 10
 										) / 10 : 0}
 									</div>
@@ -375,26 +368,26 @@ export default function AdminGamePage() {
 															<td className="py-1 font-medium">{vote.username}</td>
 															<td className="text-center">
 																<span className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
-																	{vote.uncertainty} ({game.scoreConfig.uncertainty[vote.uncertainty]})
+																	{vote.uncertainty}
 																</span>
 															</td>
 															<td className="text-center">
 																<span className="px-1 py-0.5 bg-green-100 text-green-800 rounded text-xs">
-																	{vote.complexity} ({game.scoreConfig.complexity[vote.complexity]})
+																	{vote.complexity}
 																</span>
 															</td>
 															<td className="text-center">
 																<span className="px-1 py-0.5 bg-purple-100 text-purple-800 rounded text-xs">
-																	{vote.effort} ({game.scoreConfig.effort[vote.effort]})
+																	{vote.effort}
 																</span>
 															</td>
-															<td className="text-center font-bold">{getScoreForVote(vote)}</td>
+															<td className="text-center font-bold">{getVoteScore(vote)}</td>
 														</tr>
 													))}
 												</tbody>
 											</table>
 											<div className="mt-2 text-sm text-gray-600">
-												Average Score: {Math.round(task.votes.reduce((sum, vote) => sum + getScoreForVote(vote), 0) / task.votes.length * 10) / 10}
+												Average Score: {Math.round(task.votes.reduce((sum, vote) => sum + getVoteScore(vote), 0) / task.votes.length * 10) / 10}
 											</div>
 										</div>
 									)}

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Vote } from "@/types/game";
 import { useGameState } from "@/hooks/useGameState";
+import { calculateScore } from "@/utils/scoreCalculation";
 
 export default function PlayGamePage() {
 	const params = useParams();
@@ -111,10 +112,11 @@ export default function PlayGamePage() {
 			return 0;
 		}
 
-		return (
-			game.scoreConfig.uncertainty[currentVote.uncertainty] +
-			game.scoreConfig.complexity[currentVote.complexity] +
-			game.scoreConfig.effort[currentVote.effort]
+		return calculateScore(
+			currentVote.uncertainty,
+			currentVote.complexity,
+			currentVote.effort,
+			game.scoreConfig
 		);
 	};
 
@@ -184,12 +186,10 @@ export default function PlayGamePage() {
 	const LevelButton = ({
 		dimension,
 		level,
-		score,
 		color,
 	}: {
 		dimension: "uncertainty" | "complexity" | "effort";
 		level: "low" | "mid" | "high";
-		score: number;
 		color: string;
 	}) => {
 		const isSelected = currentVote[dimension] === level;
@@ -209,7 +209,7 @@ export default function PlayGamePage() {
 			<button
 				onClick={handleClick}
 				disabled={!canVote}
-				className={`p-4 rounded-lg border-2 transition-all ${
+				className={`p-3 rounded-lg border-2 transition-all ${
 					isSelected
 						? `${color} border-current`
 						: canVote
@@ -217,8 +217,7 @@ export default function PlayGamePage() {
 						: "border-gray-200 bg-gray-100"
 				} ${!canVote ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
 			>
-				<div className="text-lg font-semibold capitalize">{level}</div>
-				<div className="text-sm">Score: {score}</div>
+				<div className="text-sm font-semibold capitalize">{level}</div>
 			</button>
 		);
 	};
@@ -301,21 +300,17 @@ export default function PlayGamePage() {
 														</td>
 														<td className="text-center">
 															<span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
-																{vote.uncertainty} (
-																{game.scoreConfig.uncertainty[vote.uncertainty]}
-																)
+																{vote.uncertainty}
 															</span>
 														</td>
 														<td className="text-center">
 															<span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
-																{vote.complexity} (
-																{game.scoreConfig.complexity[vote.complexity]})
+																{vote.complexity}
 															</span>
 														</td>
 														<td className="text-center">
 															<span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm">
-																{vote.effort} (
-																{game.scoreConfig.effort[vote.effort]})
+																{vote.effort}
 															</span>
 														</td>
 														<td className="text-center font-bold">
@@ -342,19 +337,16 @@ export default function PlayGamePage() {
 										<LevelButton
 											dimension="uncertainty"
 											level="low"
-											score={game.scoreConfig.uncertainty.low}
 											color="bg-blue-100 text-blue-800"
 										/>
 										<LevelButton
 											dimension="uncertainty"
 											level="mid"
-											score={game.scoreConfig.uncertainty.mid}
 											color="bg-blue-200 text-blue-800"
 										/>
 										<LevelButton
 											dimension="uncertainty"
 											level="high"
-											score={game.scoreConfig.uncertainty.high}
 											color="bg-blue-300 text-blue-800"
 										/>
 									</div>
@@ -368,19 +360,16 @@ export default function PlayGamePage() {
 										<LevelButton
 											dimension="complexity"
 											level="low"
-											score={game.scoreConfig.complexity.low}
 											color="bg-green-100 text-green-800"
 										/>
 										<LevelButton
 											dimension="complexity"
 											level="mid"
-											score={game.scoreConfig.complexity.mid}
 											color="bg-green-200 text-green-800"
 										/>
 										<LevelButton
 											dimension="complexity"
 											level="high"
-											score={game.scoreConfig.complexity.high}
 											color="bg-green-300 text-green-800"
 										/>
 									</div>
@@ -394,19 +383,16 @@ export default function PlayGamePage() {
 										<LevelButton
 											dimension="effort"
 											level="low"
-											score={game.scoreConfig.effort.low}
 											color="bg-purple-100 text-purple-800"
 										/>
 										<LevelButton
 											dimension="effort"
 											level="mid"
-											score={game.scoreConfig.effort.mid}
 											color="bg-purple-200 text-purple-800"
 										/>
 										<LevelButton
 											dimension="effort"
 											level="high"
-											score={game.scoreConfig.effort.high}
 											color="bg-purple-300 text-purple-800"
 										/>
 									</div>
@@ -414,10 +400,16 @@ export default function PlayGamePage() {
 							</div>
 
 							<div className="mt-8 text-center">
-								<div className="mb-4">
-									<span className="text-2xl font-bold">
-										Total Score: {calculateTotalScore()}
-									</span>
+								<div className="mb-6">
+									<div className="text-lg text-gray-600 mb-2">Current Selection Score:</div>
+									<div className="text-4xl font-bold text-blue-600 mb-4">
+										{calculateTotalScore()}
+									</div>
+									{currentVote.uncertainty && currentVote.complexity && currentVote.effort && (
+										<div className="text-sm text-gray-500">
+											{currentVote.uncertainty} × {currentVote.complexity} × {currentVote.effort}
+										</div>
+									)}
 								</div>
 
 								{(!hasVoted || canChangeVote) && (
@@ -490,40 +482,21 @@ export default function PlayGamePage() {
 																		</td>
 																		<td className="text-center">
 																			<span className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
-																				{vote.uncertainty} (
-																				{
-																					game.scoreConfig.uncertainty[
-																						vote.uncertainty
-																					]
-																				}
-																				)
+																				{vote.uncertainty}
 																			</span>
 																		</td>
 																		<td className="text-center">
 																			<span className="px-1 py-0.5 bg-green-100 text-green-800 rounded text-xs">
-																				{vote.complexity} (
-																				{
-																					game.scoreConfig.complexity[
-																						vote.complexity
-																					]
-																				}
-																				)
+																				{vote.complexity}
 																			</span>
 																		</td>
 																		<td className="text-center">
 																			<span className="px-1 py-0.5 bg-purple-100 text-purple-800 rounded text-xs">
-																				{vote.effort} (
-																				{game.scoreConfig.effort[vote.effort]})
+																				{vote.effort}
 																			</span>
 																		</td>
 																		<td className="text-center font-bold">
-																			{game.scoreConfig.uncertainty[
-																				vote.uncertainty
-																			] +
-																				game.scoreConfig.complexity[
-																					vote.complexity
-																				] +
-																				game.scoreConfig.effort[vote.effort]}
+																			{calculateScore(vote.uncertainty, vote.complexity, vote.effort, game.scoreConfig)}
 																		</td>
 																	</tr>
 																))}
@@ -534,14 +507,7 @@ export default function PlayGamePage() {
 															{Math.round(
 																(task.votes.reduce(
 																	(sum, vote) =>
-																		sum +
-																		game.scoreConfig.uncertainty[
-																			vote.uncertainty
-																		] +
-																		game.scoreConfig.complexity[
-																			vote.complexity
-																		] +
-																		game.scoreConfig.effort[vote.effort],
+																		sum + calculateScore(vote.uncertainty, vote.complexity, vote.effort, game.scoreConfig),
 																	0
 																) /
 																	task.votes.length) *
