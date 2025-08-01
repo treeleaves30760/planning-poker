@@ -19,8 +19,9 @@ A collaborative task difficulty estimation tool for agile teams. Story Point Par
 ### Option 1: Docker (Recommended)
 
 1. **Pull and run the Docker image:**
+
 ```bash
-docker run -p 3000:3000 ghcr.io/[username]/story-point-party:latest
+docker run -p 3000:3000 ghcr.io/treeleaves30760/story-point-party:latest
 ```
 
 2. **Open your browser:**
@@ -29,11 +30,13 @@ Visit [http://localhost:3000](http://localhost:3000)
 ### Option 2: Local Development
 
 1. **Install dependencies:**
+
 ```bash
 npm install
 ```
 
 2. **Start the development server:**
+
 ```bash
 npm run dev
 ```
@@ -45,7 +48,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ### For Admins (Session Leaders)
 
-1. **Choose Scoring System**: 
+1. **Choose Scoring System**:
    - **Fibonacci Scoring** (Recommended): `/admin-fibonacci` - Advanced combination-based scoring
    - **Legacy Scoring**: `/admin` - Simple additive scoring
 2. **Configure Scoring**: Set up your preferred scoring values (27 combinations for Fibonacci)
@@ -67,6 +70,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 ### Network Access
 
 To allow team members on different devices to join:
+
 1. Find your computer's IP address (usually `192.168.x.x`)
 2. Share: `http://[YOUR-IP]:3000/game/[gameId]/join`
 3. Team members can join from phones, tablets, or other computers
@@ -74,6 +78,7 @@ To allow team members on different devices to join:
 ## Scoring Systems
 
 ### Fibonacci Scoring (Recommended)
+
 - **27 Combinations**: Every combination of uncertainty × complexity × effort has a pre-configured Fibonacci score
 - **Fibonacci Values**: Uses 1, 2, 3, 5, 8, 13, 21 for intuitive story point estimation
 - **Real-time Preview**: See your score instantly as you make selections
@@ -81,6 +86,7 @@ To allow team members on different devices to join:
 - **Example**: Low uncertainty + High complexity + Mid effort = 8 points
 
 ### Legacy Scoring
+
 - **Additive System**: Final score = uncertainty + complexity + effort scores
 - **Simple Configuration**: Set individual dimension scores (low/mid/high)
 - **Backward Compatible**: Supports existing games and familiar workflows
@@ -89,6 +95,7 @@ To allow team members on different devices to join:
 ## Technical Details
 
 Built with modern web technologies:
+
 - **Next.js 15** with App Router
 - **TypeScript** for type safety
 - **React 19** for UI components
@@ -120,6 +127,7 @@ docker run -p 8080:3000 ghcr.io/[username]/story-point-party:latest
 ### Docker Compose (Optional)
 
 Create a `docker-compose.yml`:
+
 ```yaml
 version: '3.8'
 services:
