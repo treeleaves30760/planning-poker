@@ -16,6 +16,18 @@ A collaborative task difficulty estimation tool for agile teams. Story Point Par
 
 ## Quick Start
 
+### Option 1: Docker (Recommended)
+
+1. **Pull and run the Docker image:**
+```bash
+docker run -p 3000:3000 ghcr.io/[username]/story-point-party:latest
+```
+
+2. **Open your browser:**
+Visit [http://localhost:3000](http://localhost:3000)
+
+### Option 2: Local Development
+
 1. **Install dependencies:**
 ```bash
 npm install
@@ -83,6 +95,44 @@ Built with modern web technologies:
 - **Tailwind CSS 4** for styling
 - **File-based API** for game state management
 
+## Docker Usage
+
+### Building Locally
+
+```bash
+# Build the Docker image
+docker build -t story-point-party .
+
+# Run the container
+docker run -p 3000:3000 story-point-party
+```
+
+### Using Pre-built Image
+
+```bash
+# Pull and run from GitHub Container Registry
+docker run -p 3000:3000 ghcr.io/[username]/story-point-party:latest
+
+# Or run with custom port
+docker run -p 8080:3000 ghcr.io/[username]/story-point-party:latest
+```
+
+### Docker Compose (Optional)
+
+Create a `docker-compose.yml`:
+```yaml
+version: '3.8'
+services:
+  story-point-party:
+    image: ghcr.io/[username]/story-point-party:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data  # Persist game data
+```
+
+Then run: `docker-compose up`
+
 ## Development Commands
 
 ```bash
@@ -94,6 +144,10 @@ npm run lint         # Run ESLint for code quality
 
 # Installation
 npm install          # Install dependencies
+
+# Docker
+docker build -t story-point-party .  # Build Docker image
+docker run -p 3000:3000 story-point-party  # Run container
 ```
 
 ## Project Structure
