@@ -21,7 +21,7 @@ A collaborative task difficulty estimation tool for agile teams. Story Point Par
 1. **Pull and run the Docker image:**
 
 ```bash
-docker run -p 3000:3000 ghcr.io/treeleaves30760/story-point-party:latest
+docker run -p 3000:3000 ghcr.io/treeleaves30760/planning-poker:main
 ```
 
 2. **Open your browser:**
