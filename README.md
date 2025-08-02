@@ -1,6 +1,6 @@
-# Story Point Party 🎯
+# Planning Poker Game 🎯
 
-A collaborative task difficulty estimation tool for agile teams. Story Point Party enables distributed teams to conduct story point estimation sessions where members vote on task uncertainty, complexity, and effort levels in real-time.
+A collaborative task difficulty estimation tool for agile teams. Planning Poker Game enables distributed teams to conduct story point estimation sessions where members vote on task uncertainty, complexity, and effort levels in real-time.
 
 ## Features
 
