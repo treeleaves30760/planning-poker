@@ -11,11 +11,56 @@ export default function AdminGamePage() {
 	const gameId = params.gameId as string;
 	const { game, isLoading, error, loadGame, saveGame } = useGameState(gameId);
 	const [taskDescription, setTaskDescription] = useState("");
+	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const [password, setPassword] = useState("");
+	const [authError, setAuthError] = useState("");
 
 	useEffect(() => {
 		const interval = setInterval(loadGame, 2000);
 		return () => clearInterval(interval);
 	}, [loadGame]);
+
+	const verifyPassword = async () => {
+		if (!password.trim()) {
+			setAuthError("Please enter a password");
+			return;
+		}
+
+		try {
+			const response = await fetch(`/api/games/${gameId}/verify-admin`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ password }),
+			});
+
+			const result = await response.json();
+
+			if (result.valid) {
+				setIsAuthenticated(true);
+				setAuthError("");
+				sessionStorage.setItem(`admin-auth-${gameId}`, "true");
+			} else {
+				setAuthError("Invalid password");
+			}
+		} catch (error) {
+			setAuthError("Failed to verify password");
+		}
+	};
+
+	useEffect(() => {
+		const isStoredAuth = sessionStorage.getItem(`admin-auth-${gameId}`);
+		if (isStoredAuth === "true") {
+			setIsAuthenticated(true);
+		}
+	}, [gameId]);
+
+	const logout = () => {
+		sessionStorage.removeItem(`admin-auth-${gameId}`);
+		setIsAuthenticated(false);
+		setPassword("");
+	};
 
 	const addTask = () => {
 		if (!taskDescription.trim() || !game) return;
@@ -112,13 +157,62 @@ export default function AdminGamePage() {
 		);
 	}
 
+	if (!isAuthenticated) {
+		return (
+			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
+				<div className="max-w-md w-full mx-auto">
+					<div className="bg-white rounded-lg shadow-md p-6">
+						<h1 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+							Admin Authentication
+						</h1>
+						<p className="text-gray-600 mb-6 text-center">
+							Enter the admin password for &ldquo;{game.name}&rdquo;
+						</p>
+						
+						<div className="mb-4">
+							<label className="block text-sm font-medium text-gray-700 mb-2">
+								Password
+							</label>
+							<input
+								type="password"
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+								onKeyPress={(e) => e.key === "Enter" && verifyPassword()}
+								placeholder="Enter admin password..."
+								className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+							/>
+							{authError && (
+								<p className="text-red-600 text-sm mt-1">{authError}</p>
+							)}
+						</div>
+
+						<button
+							onClick={verifyPassword}
+							className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+						>
+							Access Admin Panel
+						</button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="min-h-screen bg-gray-50 py-8">
 			<div className="max-w-6xl mx-auto px-4">
 				<div className="mb-6">
-					<h1 className="text-3xl font-bold text-gray-900">
-						{game.name} - Admin Panel
-					</h1>
+					<div className="flex items-center justify-between">
+						<h1 className="text-3xl font-bold text-gray-900">
+							{game.name} - Admin Panel
+						</h1>
+						<button
+							onClick={logout}
+							className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+						>
+							Logout
+						</button>
+					</div>
 					<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
 						<p className="text-sm font-medium text-blue-900 mb-2">
 							Share this link for players to join:

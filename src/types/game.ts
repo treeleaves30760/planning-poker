@@ -49,6 +49,7 @@ export interface Game {
   id: string;
   name: string;
   adminId: string;
+  adminPassword: string;
   scoreConfig: ScoreConfig;
   users: User[];
   currentTask: Task | null;

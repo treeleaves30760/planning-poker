@@ -13,6 +13,7 @@ export default function AdminFibonacciPage() {
 		defaultFibonacciScores
 	);
 	const [gameName, setGameName] = useState("");
+	const [adminPassword, setAdminPassword] = useState("");
 
 	const handleScoreChange = (combination: string, value: number) => {
 		setScoreConfig((prev) => ({
@@ -34,6 +35,11 @@ export default function AdminFibonacciPage() {
 			return;
 		}
 
+		if (!adminPassword.trim()) {
+			alert("Please enter an admin password");
+			return;
+		}
+
 		const gameId = Math.random().toString(36).substring(2, 11);
 		const adminId = Math.random().toString(36).substring(2, 11);
 
@@ -41,6 +47,7 @@ export default function AdminFibonacciPage() {
 			id: gameId,
 			name: gameName,
 			adminId,
+			adminPassword,
 			scoreConfig,
 			users: [],
 			currentTask: null,
@@ -226,6 +233,22 @@ export default function AdminFibonacciPage() {
 							placeholder="Enter game name..."
 							className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
 						/>
+					</div>
+
+					<div className="mb-4">
+						<label className="block text-sm font-medium text-gray-700 mb-2">
+							Admin Password
+						</label>
+						<input
+							type="password"
+							value={adminPassword}
+							onChange={(e) => setAdminPassword(e.target.value)}
+							placeholder="Enter admin password..."
+							className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+						/>
+						<p className="text-sm text-gray-500 mt-1">
+							This password will be required to access the admin panel
+						</p>
 					</div>
 
 					<button
