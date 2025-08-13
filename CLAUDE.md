@@ -11,7 +11,7 @@ Story Point Party is a collaborative task difficulty estimation tool built with 
 ```bash
 # Development
 npm run dev          # Start development server with Turbopack at http://localhost:3000
-npm run build        # Create production build
+npm run build        # Create production build, do not run without user ask since it may break the dev server runtime
 npm run start        # Run production server
 npm run lint         # Run ESLint for code quality checks
 
@@ -24,6 +24,7 @@ npm install          # Install dependencies
 **App Router Pattern**: Uses Next.js App Router with the `src/app/` directory structure
 
 **Application Structure**:
+
 - `src/app/page.tsx` - Landing page with navigation to admin setup
 - `src/app/admin/page.tsx` - Admin scoring configuration and game creation
 - `src/app/game/[gameId]/admin/page.tsx` - Admin game control panel
@@ -35,6 +36,7 @@ npm install          # Install dependencies
 - `src/data/defaultScores.json` - Default scoring configuration
 
 **Key Technologies**:
+
 - Next.js 15 with App Router and Server Components
 - TypeScript with strict configuration and path aliases (`@/*` → `./src/*`)
 - Tailwind CSS 4.x for responsive UI components
@@ -42,6 +44,7 @@ npm install          # Install dependencies
 - Real-time polling for live game synchronization
 
 **Game Features**:
+
 - Admin scoring configuration (uncertainty, complexity, effort dimensions)
 - Real-time multi-user voting sessions
 - Vote reveal and change management

@@ -9,6 +9,7 @@ import VoteStatistics from "@/components/voting/VoteStatistics";
 import VotingResults from "@/components/voting/VotingResults";
 import VotingSection from "@/components/voting/VotingSection";
 import TaskHistory from "@/components/game/TaskHistory";
+import OnlinePlayerList from "@/components/game/OnlinePlayerList";
 import { DimensionType, LevelType } from "@/components/voting/votingDomains";
 
 export default function PlayGamePage() {
@@ -225,6 +226,9 @@ export default function PlayGamePage() {
 
 	return (
 		<div className="min-h-screen bg-gray-50 py-8">
+			{/* Online Player List - Floating Card */}
+			<OnlinePlayerList users={game.users} currentUserId={userId} />
+			
 			<div className="max-w-4xl mx-auto px-4">
 				<div className="mb-6">
 					<h1 className="text-3xl font-bold text-gray-900">{game.name}</h1>

@@ -6,6 +6,7 @@ export interface VoteStatisticsData {
 	effort: { low: number; mid: number; high: number };
 	totalVotes: number;
 	averageScore: number;
+	scoreCounts: { [score: number]: number };
 }
 
 interface VoteStatisticsProps {
@@ -28,12 +29,16 @@ export function getVoteStatistics(votes: Vote[]): VoteStatisticsData | null {
 					votes.length) *
 					10
 			) / 10,
+		scoreCounts: {},
 	};
 
 	votes.forEach((vote) => {
 		stats.uncertainty[vote.uncertainty]++;
 		stats.complexity[vote.complexity]++;
 		stats.effort[vote.effort]++;
+		
+		// Count votes for each score
+		stats.scoreCounts[vote.totalScore] = (stats.scoreCounts[vote.totalScore] || 0) + 1;
 	});
 
 	return stats;
@@ -61,6 +66,22 @@ export default function VoteStatistics({ votes }: VoteStatisticsProps) {
 				</div>
 
 				<div className="space-y-3">
+					<div>
+						<div className="text-sm font-medium text-orange-600 mb-2">
+							Score Distribution
+						</div>
+						<div className="space-y-1">
+							{Object.entries(stats.scoreCounts)
+								.sort(([a], [b]) => Number(a) - Number(b))
+								.map(([score, count]) => (
+									<div key={score} className="flex justify-between text-xs">
+										<span className="font-medium">{score} points:</span>
+										<span>{count} vote{count !== 1 ? 's' : ''}</span>
+									</div>
+								))}
+						</div>
+					</div>
+
 					<div>
 						<div className="text-sm font-medium text-blue-600 mb-1">
 							Uncertainty

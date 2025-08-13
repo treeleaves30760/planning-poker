@@ -276,22 +276,25 @@ export default function AdminGamePage() {
 										</button>
 									)}
 
-									{game.currentTask.revealed &&
-										!game.currentTask.allowChanges && (
-											<button
-												onClick={allowChanges}
-												className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-											>
-												Allow Changes
-											</button>
-										)}
+									{game.currentTask.revealed && (
+										<>
+											{!game.currentTask.allowChanges && (
+												<button
+													onClick={allowChanges}
+													className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+												>
+													Allow Changes
+												</button>
+											)}
 
-									<button
-										onClick={nextQuestion}
-										className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
-									>
-										Next Question
-									</button>
+											<button
+												onClick={nextQuestion}
+												className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+											>
+												Next Question
+											</button>
+										</>
+									)}
 								</div>
 							</div>
 						)}
