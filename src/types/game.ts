@@ -56,6 +56,7 @@ export interface Game {
 	currentTask: Task | null;
 	tasks: Task[];
 	completedTasks: Task[];
+	taskQueue: Task[];
 	isActive: boolean;
 	createdAt: Date;
 }

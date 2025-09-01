@@ -66,6 +66,24 @@ function initializeSchema(database: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(completed_at);
   `);
 
+	// Create task_queue table for storing imported tasks
+	database.exec(`
+    CREATE TABLE IF NOT EXISTS task_queue (
+      id TEXT PRIMARY KEY,
+      game_id TEXT NOT NULL,
+      description TEXT NOT NULL,
+      queue_position INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
+    )
+  `);
+
+	// Create index for task_queue
+	database.exec(`
+    CREATE INDEX IF NOT EXISTS idx_task_queue_game_id ON task_queue(game_id);
+    CREATE INDEX IF NOT EXISTS idx_task_queue_position ON task_queue(queue_position);
+  `);
+
 	// Migration: Add final_score column if it doesn't exist
 	try {
 		database.exec(`ALTER TABLE tasks ADD COLUMN final_score REAL`);
@@ -91,12 +109,12 @@ export class DatabaseManager {
 
 	// Game operations
 	createGame(game: Game): boolean {
-		const stmt = this.db.prepare(`
-      INSERT INTO games (id, name, admin_id, admin_password, score_config, current_task, is_active, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+		const transaction = this.db.transaction(() => {
+			const stmt = this.db.prepare(`
+        INSERT INTO games (id, name, admin_id, admin_password, score_config, current_task, is_active, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
 
-		try {
 			stmt.run(
 				game.id,
 				game.name,
@@ -109,6 +127,21 @@ export class DatabaseManager {
 					? game.createdAt.toISOString()
 					: new Date(game.createdAt).toISOString()
 			);
+
+			// Initialize empty task queue
+			const insertQueueStmt = this.db.prepare(`
+        INSERT INTO task_queue (id, game_id, description, queue_position)
+        VALUES (?, ?, ?, ?)
+      `);
+
+			for (let i = 0; i < (game.taskQueue || []).length; i++) {
+				const task = game.taskQueue[i];
+				insertQueueStmt.run(task.id, game.id, task.description, i);
+			}
+		});
+
+		try {
+			transaction();
 			return true;
 		} catch (error) {
 			console.error("Error creating game:", error);
@@ -182,6 +215,20 @@ export class DatabaseManager {
 			created_at: string;
 		}[];
 
+		// Get task queue
+		const taskQueueStmt = this.db.prepare(`
+      SELECT * FROM task_queue 
+      WHERE game_id = ? 
+      ORDER BY queue_position ASC, created_at ASC
+    `);
+		const taskQueueRows = taskQueueStmt.all(gameId) as {
+			id: string;
+			game_id: string;
+			description: string;
+			queue_position: number;
+			created_at: string;
+		}[];
+
 		const game: Game = {
 			id: gameRow.id,
 			name: gameRow.name,
@@ -213,6 +260,13 @@ export class DatabaseManager {
 				allowChanges: row.allow_changes === 1,
 				completedAt: row.completed_at ? new Date(row.completed_at) : new Date(),
 				finalScore: row.final_score || undefined,
+			})),
+			taskQueue: taskQueueRows.map((row) => ({
+				id: row.id,
+				description: row.description,
+				votes: [],
+				revealed: false,
+				allowChanges: false,
 			})),
 			isActive: gameRow.is_active === 1,
 			createdAt: new Date(gameRow.created_at),
@@ -282,6 +336,23 @@ export class DatabaseManager {
 						: null,
 					task.finalScore || null
 				);
+			}
+
+			// Handle task queue - first clear existing queue for this game
+			const clearQueueStmt = this.db.prepare(
+				`DELETE FROM task_queue WHERE game_id = ?`
+			);
+			clearQueueStmt.run(game.id);
+
+			// Insert new queue items
+			const insertQueueStmt = this.db.prepare(`
+        INSERT INTO task_queue (id, game_id, description, queue_position)
+        VALUES (?, ?, ?, ?)
+      `);
+
+			for (let i = 0; i < (game.taskQueue || []).length; i++) {
+				const task = game.taskQueue[i];
+				insertQueueStmt.run(task.id, game.id, task.description, i);
 			}
 		});
 

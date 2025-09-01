@@ -6,6 +6,8 @@ import { Task, Vote } from "@/types/game";
 import { useGameState } from "@/hooks/useGameState";
 import { useSocket } from "@/hooks/useSocket";
 import { getScoreForVote } from "@/utils/scoreCalculation";
+import TaskImport from "@/components/admin/TaskImport";
+import TaskQueue from "@/components/admin/TaskQueue";
 
 export default function AdminGamePage() {
 	const params = useParams();
@@ -15,6 +17,7 @@ export default function AdminGamePage() {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [password, setPassword] = useState("");
 	const [authError, setAuthError] = useState("");
+	const [taskOperationLoading, setTaskOperationLoading] = useState(false);
 
 	// Get admin user ID for WebSocket
 	const [adminUserId, setAdminUserId] = useState<string>("");
@@ -195,6 +198,191 @@ export default function AdminGamePage() {
 
 		await saveGame(updatedGame);
 		notifyGameUpdate();
+	};
+
+	const handleTasksImported = async (tasks: Task[]) => {
+		if (!game) return;
+
+		setTaskOperationLoading(true);
+		try {
+			const response = await fetch(`/api/games/${gameId}/tasks`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					action: "import",
+					tasks,
+				}),
+			});
+
+			const result = await response.json();
+			if (result.success) {
+				await loadGame();
+				notifyGameUpdate();
+			} else {
+				console.error("Failed to import tasks:", result.error);
+			}
+		} catch (error) {
+			console.error("Error importing tasks:", error);
+		} finally {
+			setTaskOperationLoading(false);
+		}
+	};
+
+	const handleTaskSelect = async (task: Task) => {
+		if (!game) return;
+
+		setTaskOperationLoading(true);
+		try {
+			const response = await fetch(`/api/games/${gameId}/tasks`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					action: "select",
+					taskId: task.id,
+				}),
+			});
+
+			const result = await response.json();
+			if (result.success) {
+				await loadGame();
+				notifyGameUpdate();
+			} else {
+				console.error("Failed to select task:", result.error);
+			}
+		} catch (error) {
+			console.error("Error selecting task:", error);
+		} finally {
+			setTaskOperationLoading(false);
+		}
+	};
+
+	const handleTaskEdit = async (taskId: string, description: string) => {
+		if (!game) return;
+
+		setTaskOperationLoading(true);
+		try {
+			const response = await fetch(`/api/games/${gameId}/tasks`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					action: "edit",
+					taskId,
+					description,
+				}),
+			});
+
+			const result = await response.json();
+			if (result.success) {
+				await loadGame();
+				notifyGameUpdate();
+			} else {
+				console.error("Failed to edit task:", result.error);
+			}
+		} catch (error) {
+			console.error("Error editing task:", error);
+		} finally {
+			setTaskOperationLoading(false);
+		}
+	};
+
+	const handleTaskDelete = async (taskId: string) => {
+		if (!game) return;
+
+		setTaskOperationLoading(true);
+		try {
+			const response = await fetch(`/api/games/${gameId}/tasks`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					action: "delete",
+					taskId,
+				}),
+			});
+
+			const result = await response.json();
+			if (result.success) {
+				await loadGame();
+				notifyGameUpdate();
+			} else {
+				console.error("Failed to delete task:", result.error);
+			}
+		} catch (error) {
+			console.error("Error deleting task:", error);
+		} finally {
+			setTaskOperationLoading(false);
+		}
+	};
+
+	const handleTaskReorder = async (fromIndex: number, toIndex: number) => {
+		if (!game) return;
+
+		setTaskOperationLoading(true);
+		try {
+			const response = await fetch(`/api/games/${gameId}/tasks`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					action: "reorder",
+					fromIndex,
+					toIndex,
+				}),
+			});
+
+			const result = await response.json();
+			if (result.success) {
+				await loadGame();
+				notifyGameUpdate();
+			} else {
+				console.error("Failed to reorder tasks:", result.error);
+			}
+		} catch (error) {
+			console.error("Error reordering tasks:", error);
+		} finally {
+			setTaskOperationLoading(false);
+		}
+	};
+
+	const handleClearQueue = async () => {
+		if (!game) return;
+
+		if (!confirm("Are you sure you want to clear all tasks from the queue?")) {
+			return;
+		}
+
+		setTaskOperationLoading(true);
+		try {
+			const response = await fetch(`/api/games/${gameId}/tasks`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					action: "clear",
+				}),
+			});
+
+			const result = await response.json();
+			if (result.success) {
+				await loadGame();
+				notifyGameUpdate();
+			} else {
+				console.error("Failed to clear queue:", result.error);
+			}
+		} catch (error) {
+			console.error("Error clearing queue:", error);
+		} finally {
+			setTaskOperationLoading(false);
+		}
 	};
 
 	if (isLoading) {
@@ -403,6 +591,23 @@ export default function AdminGamePage() {
 							)}
 						</div>
 					</div>
+				</div>
+
+				{/* Task Import and Queue Management */}
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+					<TaskImport
+						onTasksImported={handleTasksImported}
+						isLoading={taskOperationLoading}
+					/>
+					<TaskQueue
+						tasks={game.taskQueue || []}
+						onTaskSelect={handleTaskSelect}
+						onTaskEdit={handleTaskEdit}
+						onTaskDelete={handleTaskDelete}
+						onTaskReorder={handleTaskReorder}
+						onClearQueue={handleClearQueue}
+						isLoading={taskOperationLoading}
+					/>
 				</div>
 
 				{game.currentTask && (
