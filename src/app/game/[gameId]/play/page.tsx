@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Vote } from "@/types/game";
 import { useGameState } from "@/hooks/useGameState";
+import { useSocket } from "@/hooks/useSocket";
 import { calculateScore } from "@/utils/scoreCalculation";
 import VoteStatistics from "@/components/voting/VoteStatistics";
 import VotingResults from "@/components/voting/VotingResults";
@@ -85,29 +86,31 @@ export default function PlayGamePage() {
 		setUsername(storedUsername);
 	}, [gameId, router]);
 
+	// Socket.io connection for real-time updates
+	const { isConnected, activeUsers, notifyGameUpdate } = useSocket({
+		gameId,
+		userId: userId || '',
+		username: username || '',
+		isAdmin: false,
+		onUserJoined: useCallback(() => loadGame(), [loadGame]),
+		onUserLeft: useCallback(() => loadGame(), [loadGame]),
+		onGameStateChanged: useCallback(() => loadGame(), [loadGame]),
+		onConnect: useCallback(() => console.log('Connected to game Socket.io'), []),
+		onDisconnect: useCallback(() => console.log('Disconnected from game Socket.io'), [])
+	});
+
 	useEffect(() => {
 		if (userId) {
-			// Use longer interval when user is actively voting to reduce interference
-			const pollInterval = isVoting ? 5000 : 3000;
+			// Reduce polling frequency since we have WebSocket updates
+			const pollInterval = isConnected ? 10000 : 3000; // Less frequent when connected
 			const interval = setInterval(() => {
 				loadGame();
 			}, pollInterval);
 			return () => clearInterval(interval);
 		}
-	}, [loadGame, userId, isVoting]);
+	}, [loadGame, userId, isConnected]);
 
-	useEffect(() => {
-		const handleBeforeUnload = () => {
-			if (game && userId) {
-				const updatedUsers = game.users.filter((u) => u.id !== userId);
-				const updatedGame = { ...game, users: updatedUsers };
-				saveGame(updatedGame).catch(console.error);
-			}
-		};
-
-		window.addEventListener("beforeunload", handleBeforeUnload);
-		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-	}, [game, userId, saveGame]);
+	// Note: WebSocket hook handles cleanup on beforeunload automatically
 
 	const calculateTotalScore = () => {
 		if (
@@ -178,6 +181,7 @@ export default function PlayGamePage() {
 
 		try {
 			await saveGame(updatedGame);
+			notifyGameUpdate();
 			setHasVoted(true);
 			voteLoadedRef.current = true; // Mark vote as loaded after successful submission
 		} catch (err) {
@@ -233,7 +237,17 @@ export default function PlayGamePage() {
 				<div className="mb-6">
 					<h1 className="text-3xl font-bold text-gray-900">{game.name}</h1>
 					<p className="text-gray-600">Welcome, {username}!</p>
-					<p className="text-gray-600">Players: {game.users.length}</p>
+					<div className="flex items-center gap-4 text-gray-600">
+						<span>Players: {activeUsers || game.users.length}</span>
+						<span className={`inline-flex items-center gap-1 text-sm ${
+							isConnected ? 'text-green-600' : 'text-red-600'
+						}`}>
+							<div className={`w-2 h-2 rounded-full ${
+								isConnected ? 'bg-green-400' : 'bg-red-400'
+							}`}></div>
+							{isConnected ? 'Connected' : 'Reconnecting...'}
+						</span>
+					</div>
 				</div>
 
 				{!game.currentTask ? (

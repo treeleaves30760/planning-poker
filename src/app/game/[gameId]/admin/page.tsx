@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Task, Vote } from "@/types/game";
 import { useGameState } from "@/hooks/useGameState";
+import { useSocket } from "@/hooks/useSocket";
 import { getScoreForVote } from "@/utils/scoreCalculation";
 
 export default function AdminGamePage() {
@@ -15,10 +16,40 @@ export default function AdminGamePage() {
 	const [password, setPassword] = useState("");
 	const [authError, setAuthError] = useState("");
 
+	// Get admin user ID for WebSocket
+	const [adminUserId, setAdminUserId] = useState<string>('');
+	
 	useEffect(() => {
-		const interval = setInterval(loadGame, 2000);
-		return () => clearInterval(interval);
-	}, [loadGame]);
+		// Generate or retrieve admin user ID
+		let storedAdminId = sessionStorage.getItem(`admin-user-id-${gameId}`);
+		if (!storedAdminId) {
+			storedAdminId = `admin-${Math.random().toString(36).substring(2, 11)}`;
+			sessionStorage.setItem(`admin-user-id-${gameId}`, storedAdminId);
+		}
+		setAdminUserId(storedAdminId);
+	}, [gameId]);
+
+	// Socket.io connection for real-time updates
+	const { isConnected, activeUsers, notifyGameUpdate } = useSocket({
+		gameId,
+		userId: adminUserId,
+		username: 'Admin',
+		isAdmin: true,
+		onUserJoined: useCallback(() => loadGame(), [loadGame]),
+		onUserLeft: useCallback(() => loadGame(), [loadGame]),
+		onGameStateChanged: useCallback(() => loadGame(), [loadGame]),
+		onConnect: useCallback(() => console.log('Admin connected to Socket.io'), []),
+		onDisconnect: useCallback(() => console.log('Admin disconnected from Socket.io'), [])
+	});
+
+	useEffect(() => {
+		if (adminUserId) {
+			// Reduce polling frequency since we have WebSocket updates
+			const pollInterval = isConnected ? 5000 : 2000;
+			const interval = setInterval(loadGame, pollInterval);
+			return () => clearInterval(interval);
+		}
+	}, [loadGame, adminUserId, isConnected]);
 
 	const verifyPassword = async () => {
 		if (!password.trim()) {
@@ -62,7 +93,7 @@ export default function AdminGamePage() {
 		setPassword("");
 	};
 
-	const addTask = () => {
+	const addTask = async () => {
 		if (!taskDescription.trim() || !game) return;
 
 		const newTask: Task = {
@@ -79,11 +110,12 @@ export default function AdminGamePage() {
 			tasks: [...game.tasks, newTask],
 		};
 
-		saveGame(updatedGame);
+		await saveGame(updatedGame);
+		notifyGameUpdate();
 		setTaskDescription("");
 	};
 
-	const revealVotes = () => {
+	const revealVotes = async () => {
 		if (!game?.currentTask) return;
 
 		const updatedTask = { ...game.currentTask, revealed: true };
@@ -93,10 +125,11 @@ export default function AdminGamePage() {
 			tasks: game.tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)),
 		};
 
-		saveGame(updatedGame);
+		await saveGame(updatedGame);
+		notifyGameUpdate();
 	};
 
-	const allowChanges = () => {
+	const allowChanges = async () => {
 		if (!game?.currentTask) return;
 
 		const updatedTask = { ...game.currentTask, allowChanges: true };
@@ -106,10 +139,11 @@ export default function AdminGamePage() {
 			tasks: game.tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)),
 		};
 
-		saveGame(updatedGame);
+		await saveGame(updatedGame);
+		notifyGameUpdate();
 	};
 
-	const nextQuestion = () => {
+	const nextQuestion = async () => {
 		if (!game || !game.currentTask) return;
 
 		// Mark current task as completed and move to history
@@ -124,7 +158,8 @@ export default function AdminGamePage() {
 			completedTasks: [...(game.completedTasks || []), completedTask],
 		};
 
-		saveGame(updatedGame);
+		await saveGame(updatedGame);
+		notifyGameUpdate();
 		setTaskDescription("");
 	};
 
@@ -235,7 +270,17 @@ export default function AdminGamePage() {
 						</div>
 					</div>
 					<p className="text-gray-600 mt-2">Game ID: {gameId}</p>
-					<p className="text-gray-600">Active Users: {game.users.length}</p>
+					<div className="flex items-center gap-4 text-gray-600">
+						<span>Active Users: {activeUsers || game.users.length}</span>
+						<span className={`inline-flex items-center gap-1 text-sm ${
+							isConnected ? 'text-green-600' : 'text-red-600'
+						}`}>
+							<div className={`w-2 h-2 rounded-full ${
+								isConnected ? 'bg-green-400' : 'bg-red-400'
+							}`}></div>
+							{isConnected ? 'Connected' : 'Reconnecting...'}
+						</span>
+					</div>
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -1,22 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { Game } from '@/types/game';
-
-const GAMES_DIR = path.join(process.cwd(), 'data', 'games');
-
-async function ensureGamesDir() {
-  try {
-    await fs.access(GAMES_DIR);
-  } catch {
-    await fs.mkdir(GAMES_DIR, { recursive: true });
-  }
-}
-
-async function getGameFilePath(gameId: string) {
-  await ensureGamesDir();
-  return path.join(GAMES_DIR, `${gameId}.json`);
-}
+import { dbManager } from '@/lib/database';
 
 export async function GET(
   request: NextRequest,
@@ -24,10 +8,11 @@ export async function GET(
 ) {
   try {
     const { gameId } = await params;
-    const filePath = await getGameFilePath(gameId);
+    const game = dbManager.getGame(gameId);
     
-    const data = await fs.readFile(filePath, 'utf8');
-    const game: Game = JSON.parse(data);
+    if (!game) {
+      return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+    }
     
     return NextResponse.json(game);
   } catch (error) {
@@ -43,11 +28,17 @@ export async function PUT(
   try {
     const { gameId } = await params;
     const game: Game = await request.json();
-    const filePath = await getGameFilePath(gameId);
     
-    await fs.writeFile(filePath, JSON.stringify(game, null, 2));
+    // Ensure the game ID matches
+    game.id = gameId;
     
-    return NextResponse.json({ success: true });
+    const success = dbManager.updateGame(game);
+    
+    if (success) {
+      return NextResponse.json({ success: true });
+    } else {
+      return NextResponse.json({ error: 'Failed to save game' }, { status: 500 });
+    }
   } catch (error) {
     console.error('Error saving game:', error);
     return NextResponse.json({ error: 'Failed to save game' }, { status: 500 });
