@@ -47,76 +47,63 @@ export default function TaskHistory({
 
 			{!isCollapsed && (
 				<div className="space-y-4">
-					{tasks
-						.slice()
-						.reverse()
-						.map((task, index) => (
-							<div
-								key={task.id}
-								className="border rounded-lg p-4 bg-gray-50"
-							>
-								<div className="flex justify-between items-start mb-2">
-									<h4 className="font-semibold">
-										Task #{tasks.length - index}
-									</h4>
-									<span className="text-sm text-gray-500">
-										{task.completedAt
-											? new Date(task.completedAt).toLocaleString()
-											: "Recently completed"}
-									</span>
-								</div>
-								<p className="text-gray-700 mb-3">{task.description}</p>
+					{tasks.slice().map((task, index) => (
+						<div key={task.id} className="border rounded-lg p-4 bg-gray-50">
+							<div className="flex justify-between items-start mb-2">
+								<h4 className="font-semibold">Task #{index + 1}</h4>
+								<span className="text-sm text-gray-500">
+									{task.completedAt
+										? new Date(task.completedAt).toLocaleString()
+										: "Recently completed"}
+								</span>
+							</div>
+							<p className="text-gray-700 mb-3">{task.description}</p>
 
-								{task.votes.length > 0 && (
-									<div className="overflow-x-auto">
-										<table className="w-full text-sm">
-											<thead>
-												<tr className="border-b">
-													<th className="text-left py-1">User</th>
-													<th className="text-center py-1">
-														Uncertainty
-													</th>
-													<th className="text-center py-1">
-														Complexity
-													</th>
-													<th className="text-center py-1">Effort</th>
-													<th className="text-center py-1">Total</th>
+							{task.votes.length > 0 && (
+								<div className="overflow-x-auto">
+									<table className="w-full text-sm">
+										<thead>
+											<tr className="border-b">
+												<th className="text-left py-1">User</th>
+												<th className="text-center py-1">Uncertainty</th>
+												<th className="text-center py-1">Complexity</th>
+												<th className="text-center py-1">Effort</th>
+												<th className="text-center py-1">Total</th>
+											</tr>
+										</thead>
+										<tbody>
+											{task.votes.map((vote) => (
+												<tr key={vote.userId} className="border-b">
+													<td className="py-1 font-medium">{vote.username}</td>
+													<td className="text-center">
+														<span className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
+															{vote.uncertainty}
+														</span>
+													</td>
+													<td className="text-center">
+														<span className="px-1 py-0.5 bg-green-100 text-green-800 rounded text-xs">
+															{vote.complexity}
+														</span>
+													</td>
+													<td className="text-center">
+														<span className="px-1 py-0.5 bg-purple-100 text-purple-800 rounded text-xs">
+															{vote.effort}
+														</span>
+													</td>
+													<td className="text-center font-bold">
+														{calculateScore(
+															vote.uncertainty,
+															vote.complexity,
+															vote.effort,
+															scoreConfig
+														)}
+													</td>
 												</tr>
-											</thead>
-											<tbody>
-												{task.votes.map((vote) => (
-													<tr key={vote.userId} className="border-b">
-														<td className="py-1 font-medium">
-															{vote.username}
-														</td>
-														<td className="text-center">
-															<span className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
-																{vote.uncertainty}
-															</span>
-														</td>
-														<td className="text-center">
-															<span className="px-1 py-0.5 bg-green-100 text-green-800 rounded text-xs">
-																{vote.complexity}
-															</span>
-														</td>
-														<td className="text-center">
-															<span className="px-1 py-0.5 bg-purple-100 text-purple-800 rounded text-xs">
-																{vote.effort}
-															</span>
-														</td>
-														<td className="text-center font-bold">
-															{calculateScore(
-																vote.uncertainty,
-																vote.complexity,
-																vote.effort,
-																scoreConfig
-															)}
-														</td>
-													</tr>
-												))}
-											</tbody>
-										</table>
-										<div className="mt-2 text-sm text-gray-600">
+											))}
+										</tbody>
+									</table>
+									<div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+										<span>
 											Average Score:{" "}
 											{Math.round(
 												(task.votes.reduce(
@@ -133,11 +120,17 @@ export default function TaskHistory({
 													task.votes.length) *
 													10
 											) / 10}
-										</div>
+										</span>
+										{task.finalScore && (
+											<span className="font-bold text-green-700 text-lg">
+												Final Score: {task.finalScore}
+											</span>
+										)}
 									</div>
-								)}
-							</div>
-						))}
+								</div>
+							)}
+						</div>
+					))}
 				</div>
 			)}
 		</div>

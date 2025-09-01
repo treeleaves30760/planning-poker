@@ -17,8 +17,8 @@ export default function AdminGamePage() {
 	const [authError, setAuthError] = useState("");
 
 	// Get admin user ID for WebSocket
-	const [adminUserId, setAdminUserId] = useState<string>('');
-	
+	const [adminUserId, setAdminUserId] = useState<string>("");
+
 	useEffect(() => {
 		// Generate or retrieve admin user ID
 		let storedAdminId = sessionStorage.getItem(`admin-user-id-${gameId}`);
@@ -33,13 +33,19 @@ export default function AdminGamePage() {
 	const { isConnected, activeUsers, notifyGameUpdate } = useSocket({
 		gameId,
 		userId: adminUserId,
-		username: 'Admin',
+		username: "Admin",
 		isAdmin: true,
 		onUserJoined: useCallback(() => loadGame(), [loadGame]),
 		onUserLeft: useCallback(() => loadGame(), [loadGame]),
 		onGameStateChanged: useCallback(() => loadGame(), [loadGame]),
-		onConnect: useCallback(() => console.log('Admin connected to Socket.io'), []),
-		onDisconnect: useCallback(() => console.log('Admin disconnected from Socket.io'), [])
+		onConnect: useCallback(
+			() => console.log("Admin connected to Socket.io"),
+			[]
+		),
+		onDisconnect: useCallback(
+			() => console.log("Admin disconnected from Socket.io"),
+			[]
+		),
 	});
 
 	useEffect(() => {
@@ -168,6 +174,29 @@ export default function AdminGamePage() {
 		return getScoreForVote(vote, game.scoreConfig);
 	};
 
+	const setFinalScore = async (taskId: string, finalScore: number) => {
+		if (!game) return;
+
+		// Update the task with the final score
+		const updatedTasks = game.tasks.map((task) =>
+			task.id === taskId ? { ...task, finalScore } : task
+		);
+
+		const updatedCompletedTasks =
+			game.completedTasks?.map((task) =>
+				task.id === taskId ? { ...task, finalScore } : task
+			) || [];
+
+		const updatedGame = {
+			...game,
+			tasks: updatedTasks,
+			completedTasks: updatedCompletedTasks,
+		};
+
+		await saveGame(updatedGame);
+		notifyGameUpdate();
+	};
+
 	if (isLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
@@ -203,7 +232,7 @@ export default function AdminGamePage() {
 						<p className="text-gray-600 mb-6 text-center">
 							Enter the admin password for &ldquo;{game.name}&rdquo;
 						</p>
-						
+
 						<div className="mb-4">
 							<label className="block text-sm font-medium text-gray-700 mb-2">
 								Password
@@ -272,13 +301,17 @@ export default function AdminGamePage() {
 					<p className="text-gray-600 mt-2">Game ID: {gameId}</p>
 					<div className="flex items-center gap-4 text-gray-600">
 						<span>Active Players: {activeUsers}</span>
-						<span className={`inline-flex items-center gap-1 text-sm ${
-							isConnected ? 'text-green-600' : 'text-red-600'
-						}`}>
-							<div className={`w-2 h-2 rounded-full ${
-								isConnected ? 'bg-green-400' : 'bg-red-400'
-							}`}></div>
-							{isConnected ? 'Connected' : 'Reconnecting...'}
+						<span
+							className={`inline-flex items-center gap-1 text-sm ${
+								isConnected ? "text-green-600" : "text-red-600"
+							}`}
+						>
+							<div
+								className={`w-2 h-2 rounded-full ${
+									isConnected ? "bg-green-400" : "bg-red-400"
+								}`}
+							></div>
+							{isConnected ? "Connected" : "Reconnecting..."}
 						</span>
 					</div>
 				</div>
@@ -349,19 +382,21 @@ export default function AdminGamePage() {
 						<h2 className="text-xl font-semibold mb-4">Active Players</h2>
 
 						<div className="space-y-2">
-							{game.users.filter(user => !user.isAdmin).map((user) => (
-								<div
-									key={user.id}
-									className="flex items-center justify-between p-2 bg-gray-50 rounded"
-								>
-									<span className="font-medium">{user.username}</span>
-									<span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
-										Player
-									</span>
-								</div>
-							))}
+							{game.users
+								.filter((user) => !user.isAdmin)
+								.map((user) => (
+									<div
+										key={user.id}
+										className="flex items-center justify-between p-2 bg-gray-50 rounded"
+									>
+										<span className="font-medium">{user.username}</span>
+										<span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+											Player
+										</span>
+									</div>
+								))}
 
-							{game.users.filter(user => !user.isAdmin).length === 0 && (
+							{game.users.filter((user) => !user.isAdmin).length === 0 && (
 								<p className="text-gray-500 text-center py-4">
 									No players have joined yet
 								</p>
@@ -436,6 +471,56 @@ export default function AdminGamePage() {
 										))}
 									</tbody>
 								</table>
+
+								{/* Final Score Setting */}
+								{game.currentTask?.revealed && (
+									<div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+										<h4 className="font-semibold text-yellow-800 mb-2">
+											Set Final Score
+										</h4>
+										<div className="flex items-center gap-2">
+											<input
+												type="number"
+												step="0.1"
+												placeholder="Final score..."
+												defaultValue={game.currentTask.finalScore || ""}
+												className="px-3 py-1 border border-gray-300 rounded text-sm w-32 text-gray-900"
+												onKeyPress={(e) => {
+													if (e.key === "Enter") {
+														const value = parseFloat(
+															(e.target as HTMLInputElement).value
+														);
+														if (!isNaN(value)) {
+															setFinalScore(game.currentTask!.id, value);
+														}
+													}
+												}}
+											/>
+											<button
+												onClick={(e) => {
+													const input = (
+														e.target as HTMLElement
+													).parentElement?.querySelector(
+														"input"
+													) as HTMLInputElement;
+													const value = parseFloat(input.value);
+													if (!isNaN(value)) {
+														setFinalScore(game.currentTask!.id, value);
+													}
+												}}
+												className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
+											>
+												Set
+											</button>
+											{game.currentTask.finalScore && (
+												<span className="text-sm text-gray-600">
+													Current:{" "}
+													<strong>{game.currentTask.finalScore}</strong>
+												</span>
+											)}
+										</div>
+									</div>
+								)}
 							</div>
 						)}
 					</div>
@@ -444,28 +529,47 @@ export default function AdminGamePage() {
 				{game.completedTasks && game.completedTasks.length > 0 && (
 					<div className="mt-6 bg-white rounded-lg shadow-md p-6 text-gray-900">
 						<h2 className="text-xl font-semibold mb-4">Task History</h2>
-						
+
 						{/* Summary Statistics */}
 						<div className="mb-6 p-4 bg-blue-50 rounded-lg">
 							<h3 className="font-semibold mb-2">Session Summary</h3>
 							<div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
 								<div>
 									<span className="text-gray-600">Tasks Completed:</span>
-									<div className="font-bold text-lg">{game.completedTasks.length}</div>
+									<div className="font-bold text-lg">
+										{game.completedTasks.length}
+									</div>
 								</div>
 								<div>
 									<span className="text-gray-600">Total Votes:</span>
-									<div className="font-bold text-lg">{game.completedTasks.reduce((sum, task) => sum + task.votes.length, 0)}</div>
+									<div className="font-bold text-lg">
+										{game.completedTasks.reduce(
+											(sum, task) => sum + task.votes.length,
+											0
+										)}
+									</div>
 								</div>
 								<div>
 									<span className="text-gray-600">Avg. Score:</span>
 									<div className="font-bold text-lg">
-										{game.completedTasks.length > 0 ? Math.round(
-											game.completedTasks.reduce((taskSum, task) => 
-												taskSum + (task.votes.length > 0 ? 
-													task.votes.reduce((voteSum, vote) => voteSum + getVoteScore(vote), 0) / task.votes.length : 0
-												), 0) / game.completedTasks.length * 10
-										) / 10 : 0}
+										{game.completedTasks.length > 0
+											? Math.round(
+													(game.completedTasks.reduce(
+														(taskSum, task) =>
+															taskSum +
+															(task.votes.length > 0
+																? task.votes.reduce(
+																		(voteSum, vote) =>
+																			voteSum + getVoteScore(vote),
+																		0
+																  ) / task.votes.length
+																: 0),
+														0
+													) /
+														game.completedTasks.length) *
+														10
+											  ) / 10
+											: 0}
 									</div>
 								</div>
 								<div>
@@ -474,18 +578,22 @@ export default function AdminGamePage() {
 								</div>
 							</div>
 						</div>
-						
+
 						<div className="space-y-4">
 							{game.completedTasks.map((task, index) => (
 								<div key={task.id} className="border rounded-lg p-4 bg-gray-50">
 									<div className="flex justify-between items-start mb-2">
-										<h3 className="font-semibold">Task #{game.completedTasks.length - index}</h3>
+										<h3 className="font-semibold">
+											Task #{game.completedTasks.length - index}
+										</h3>
 										<span className="text-sm text-gray-500">
-											{task.completedAt ? new Date(task.completedAt).toLocaleString() : 'Recently completed'}
+											{task.completedAt
+												? new Date(task.completedAt).toLocaleString()
+												: "Recently completed"}
 										</span>
 									</div>
 									<p className="text-gray-700 mb-3">{task.description}</p>
-									
+
 									{task.votes.length > 0 && (
 										<div className="overflow-x-auto">
 											<table className="w-full text-sm">
@@ -501,7 +609,9 @@ export default function AdminGamePage() {
 												<tbody>
 													{task.votes.map((vote) => (
 														<tr key={vote.userId} className="border-b">
-															<td className="py-1 font-medium">{vote.username}</td>
+															<td className="py-1 font-medium">
+																{vote.username}
+															</td>
 															<td className="text-center">
 																<span className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
 																	{vote.uncertainty}
@@ -517,13 +627,72 @@ export default function AdminGamePage() {
 																	{vote.effort}
 																</span>
 															</td>
-															<td className="text-center font-bold">{getVoteScore(vote)}</td>
+															<td className="text-center font-bold">
+																{getVoteScore(vote)}
+															</td>
 														</tr>
 													))}
 												</tbody>
 											</table>
-											<div className="mt-2 text-sm text-gray-600">
-												Average Score: {Math.round(task.votes.reduce((sum, vote) => sum + getVoteScore(vote), 0) / task.votes.length * 10) / 10}
+											<div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+												<span>
+													Average Score:{" "}
+													{Math.round(
+														(task.votes.reduce(
+															(sum, vote) => sum + getVoteScore(vote),
+															0
+														) /
+															task.votes.length) *
+															10
+													) / 10}
+												</span>
+												{task.finalScore && (
+													<span className="font-bold text-green-700">
+														Final Score: {task.finalScore}
+													</span>
+												)}
+											</div>
+
+											{/* Final Score Setting for Completed Tasks */}
+											<div className="mt-3 p-2 bg-gray-100 rounded">
+												<h5 className="text-sm font-semibold text-gray-700 mb-1">
+													Set Final Score
+												</h5>
+												<div className="flex items-center gap-2">
+													<input
+														type="number"
+														step="0.1"
+														placeholder="Final score..."
+														defaultValue={task.finalScore || ""}
+														className="px-2 py-1 border border-gray-300 rounded text-xs w-24 text-gray-900"
+														onKeyPress={(e) => {
+															if (e.key === "Enter") {
+																const value = parseFloat(
+																	(e.target as HTMLInputElement).value
+																);
+																if (!isNaN(value)) {
+																	setFinalScore(task.id, value);
+																}
+															}
+														}}
+													/>
+													<button
+														onClick={(e) => {
+															const input = (
+																e.target as HTMLElement
+															).parentElement?.querySelector(
+																"input"
+															) as HTMLInputElement;
+															const value = parseFloat(input.value);
+															if (!isNaN(value)) {
+																setFinalScore(task.id, value);
+															}
+														}}
+														className="px-2 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700"
+													>
+														Set
+													</button>
+												</div>
 											</div>
 										</div>
 									)}
