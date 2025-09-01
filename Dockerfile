@@ -2,7 +2,7 @@
 FROM node:24-slim AS builder
 
 # Install build dependencies for native modules
-RUN apk add --no-cache python3 make g++
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
@@ -37,7 +37,7 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy built application from builder stage
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./
+COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/src ./src
 
 # Remove build dependencies to reduce image size (keep sqlite3 runtime deps)

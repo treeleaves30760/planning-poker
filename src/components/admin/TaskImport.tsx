@@ -215,8 +215,8 @@ export default function TaskImport({
 									</button>
 								</p>
 								<p className="text-sm text-gray-500 mt-2">
-									CSV must contain a 'task', 'description', 'story', or 'title'
-									column
+									CSV must contain a &apos;task&apos;, &apos;description&apos;,
+									&apos;story&apos;, or &apos;title&apos; column
 								</p>
 							</div>
 						</div>
@@ -294,8 +294,8 @@ export default function TaskImport({
 							<div>&quot;Setup CI/CD pipeline&quot;,high,devops1</div>
 						</div>
 						<p className="mt-2 text-xs">
-							Only the 'task' column will be imported. Other columns are
-							ignored.
+							Only the &apos;task&apos; column will be imported. Other columns
+							are ignored.
 						</p>
 					</div>
 				</>

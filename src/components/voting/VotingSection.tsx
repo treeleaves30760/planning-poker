@@ -18,7 +18,6 @@ interface VotingSectionProps {
 }
 
 interface LevelButtonProps {
-	dimension: DimensionType;
 	level: LevelType;
 	color: string;
 	isSelected: boolean;
@@ -26,7 +25,13 @@ interface LevelButtonProps {
 	onClick: () => void;
 }
 
-function LevelButton({ dimension, level, color, isSelected, canVote, onClick }: LevelButtonProps) {
+function LevelButton({
+	level,
+	color,
+	isSelected,
+	canVote,
+	onClick,
+}: LevelButtonProps) {
 	return (
 		<button
 			onClick={onClick}
@@ -86,12 +91,13 @@ function VotingDomain({
 
 	return (
 		<div>
-			<h4 className={`text-lg font-medium mb-4 ${colorScheme.title} text-center`}>
+			<h4
+				className={`text-lg font-medium mb-4 ${colorScheme.title} text-center`}
+			>
 				{title}
 			</h4>
 			<div className="grid grid-cols-3 gap-2">
 				<LevelButton
-					dimension={dimension}
 					level="low"
 					color={colorScheme.low}
 					isSelected={currentVote[dimension] === "low"}
@@ -99,7 +105,6 @@ function VotingDomain({
 					onClick={() => handleClick("low")}
 				/>
 				<LevelButton
-					dimension={dimension}
 					level="mid"
 					color={colorScheme.mid}
 					isSelected={currentVote[dimension] === "mid"}
@@ -107,7 +112,6 @@ function VotingDomain({
 					onClick={() => handleClick("mid")}
 				/>
 				<LevelButton
-					dimension={dimension}
 					level="high"
 					color={colorScheme.high}
 					isSelected={currentVote[dimension] === "high"}
@@ -129,7 +133,8 @@ export default function VotingSection({
 	onSubmitVote,
 	totalScore,
 }: VotingSectionProps) {
-	const isVoteComplete = currentVote.uncertainty && currentVote.complexity && currentVote.effort;
+	const isVoteComplete =
+		currentVote.uncertainty && currentVote.complexity && currentVote.effort;
 
 	return (
 		<div className="bg-white rounded-lg shadow-md p-6 text-gray-900">

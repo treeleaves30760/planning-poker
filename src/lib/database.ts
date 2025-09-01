@@ -87,7 +87,7 @@ function initializeSchema(database: Database.Database) {
 	// Migration: Add final_score column if it doesn't exist
 	try {
 		database.exec(`ALTER TABLE tasks ADD COLUMN final_score REAL`);
-	} catch (error) {
+	} catch {
 		// Column already exists, ignore error
 	}
 }

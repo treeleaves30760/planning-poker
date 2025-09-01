@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Game, Task } from "@/types/game";
+import { Game } from "@/types/game";
 import { dbManager } from "@/lib/database";
 
 export async function POST(

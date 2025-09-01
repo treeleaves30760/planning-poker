@@ -204,8 +204,8 @@ export default function TaskQueue({
 
 			<div className="mt-4 text-sm text-gray-500">
 				<p>
-					💡 Tip: Drag and drop tasks to reorder them. Click "Use Now" to start
-					voting on a task immediately.
+					💡 Tip: Drag and drop tasks to reorder them. Click &quot;Use Now&quot;
+					to start voting on a task immediately.
 				</p>
 			</div>
 		</div>
