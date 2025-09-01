@@ -10,6 +10,9 @@ interface OnlinePlayerListProps {
 
 export default function OnlinePlayerList({ users, currentUserId }: OnlinePlayerListProps) {
 	const [isCollapsed, setIsCollapsed] = useState(false);
+	
+	// Filter out admin users
+	const players = users.filter(user => !user.isAdmin);
 
 	return (
 		<div className="fixed left-4 top-1/2 -translate-y-1/2 z-50">
@@ -17,7 +20,7 @@ export default function OnlinePlayerList({ users, currentUserId }: OnlinePlayerL
 				{/* Header */}
 				<div className="flex items-center justify-between p-3 border-b border-gray-100">
 					<h3 className="text-sm font-semibold text-gray-900">
-						Online Players ({users.length})
+						Online Players ({players.length})
 					</h3>
 					<button
 						onClick={() => setIsCollapsed(!isCollapsed)}
@@ -45,13 +48,13 @@ export default function OnlinePlayerList({ users, currentUserId }: OnlinePlayerL
 				{/* Player List */}
 				{!isCollapsed && (
 					<div className="p-2 max-h-64 overflow-y-auto">
-						{users.length === 0 ? (
+						{players.length === 0 ? (
 							<div className="text-sm text-gray-500 text-center py-2">
 								No players online
 							</div>
 						) : (
 							<div className="space-y-1">
-								{users.map((user) => (
+								{players.map((user) => (
 									<div
 										key={user.id}
 										className={`flex items-center gap-2 p-2 rounded-md text-sm ${

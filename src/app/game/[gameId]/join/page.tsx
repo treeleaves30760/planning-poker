@@ -85,7 +85,7 @@ export default function JoinGamePage() {
 							<h2 className="text-xl text-gray-700">{game.name}</h2>
 							<p className="text-sm text-gray-500">Game ID: {gameId}</p>
 							<p className="text-sm text-gray-500">
-								{game.users.length} user{game.users.length !== 1 ? "s" : ""}{" "}
+								{game.users.filter(user => !user.isAdmin).length} player{game.users.filter(user => !user.isAdmin).length !== 1 ? "s" : ""}{" "}
 								already joined
 							</p>
 						</div>
@@ -121,21 +121,19 @@ export default function JoinGamePage() {
 					</button>
 				</div>
 
-				{game && game.users.length > 0 && (
+				{game && game.users.filter(user => !user.isAdmin).length > 0 && (
 					<div className="bg-white shadow-md rounded-lg p-6 text-gray-900">
 						<h3 className="text-lg font-semibold mb-4">Current Players</h3>
 						<div className="space-y-2">
-							{game.users.map((user) => (
+							{game.users.filter(user => !user.isAdmin).map((user) => (
 								<div
 									key={user.id}
 									className="flex items-center justify-between p-2 bg-gray-50 rounded"
 								>
 									<span className="font-medium">{user.username}</span>
-									{user.isAdmin && (
-										<span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs">
-											Admin
-										</span>
-									)}
+									<span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+										Player
+									</span>
 								</div>
 							))}
 						</div>

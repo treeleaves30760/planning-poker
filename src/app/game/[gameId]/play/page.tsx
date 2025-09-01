@@ -238,7 +238,7 @@ export default function PlayGamePage() {
 					<h1 className="text-3xl font-bold text-gray-900">{game.name}</h1>
 					<p className="text-gray-600">Welcome, {username}!</p>
 					<div className="flex items-center gap-4 text-gray-600">
-						<span>Players: {activeUsers || game.users.length}</span>
+						<span>Players: {activeUsers}</span>
 						<span className={`inline-flex items-center gap-1 text-sm ${
 							isConnected ? 'text-green-600' : 'text-red-600'
 						}`}>

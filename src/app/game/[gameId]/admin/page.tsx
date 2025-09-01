@@ -271,7 +271,7 @@ export default function AdminGamePage() {
 					</div>
 					<p className="text-gray-600 mt-2">Game ID: {gameId}</p>
 					<div className="flex items-center gap-4 text-gray-600">
-						<span>Active Users: {activeUsers || game.users.length}</span>
+						<span>Active Players: {activeUsers}</span>
 						<span className={`inline-flex items-center gap-1 text-sm ${
 							isConnected ? 'text-green-600' : 'text-red-600'
 						}`}>
@@ -346,30 +346,24 @@ export default function AdminGamePage() {
 					</div>
 
 					<div className="bg-white rounded-lg shadow-md p-6 text-gray-900">
-						<h2 className="text-xl font-semibold mb-4">Active Users</h2>
+						<h2 className="text-xl font-semibold mb-4">Active Players</h2>
 
 						<div className="space-y-2">
-							{game.users.map((user) => (
+							{game.users.filter(user => !user.isAdmin).map((user) => (
 								<div
 									key={user.id}
 									className="flex items-center justify-between p-2 bg-gray-50 rounded"
 								>
 									<span className="font-medium">{user.username}</span>
-									<span
-										className={`px-2 py-1 rounded text-xs ${
-											user.isAdmin
-												? "bg-red-100 text-red-800"
-												: "bg-blue-100 text-blue-800"
-										}`}
-									>
-										{user.isAdmin ? "Admin" : "User"}
+									<span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+										Player
 									</span>
 								</div>
 							))}
 
-							{game.users.length === 0 && (
+							{game.users.filter(user => !user.isAdmin).length === 0 && (
 								<p className="text-gray-500 text-center py-4">
-									No users have joined yet
+									No players have joined yet
 								</p>
 							)}
 						</div>

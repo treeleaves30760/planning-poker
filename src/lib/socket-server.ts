@@ -62,20 +62,20 @@ class SocketManager {
           // Update user heartbeat in database
           dbManager.updateUserHeartbeat(userId, gameId, username, isAdmin);
           
-          // Get current active users
-          const activeUsers = dbManager.getActiveUsers(gameId);
+          // Get current active players count (excluding admins)
+          const activePlayersCount = dbManager.getActivePlayersCount(gameId);
           
           // Notify others in the game about new user
           socket.to(`game-${gameId}`).emit('user-joined', {
             user: { id: userId, username, isAdmin },
-            activeUsers: activeUsers.length
+            activeUsers: activePlayersCount
           });
 
-          // Send confirmation with current active users
+          // Send confirmation with current active players count
           socket.emit('join-confirmed', { 
             gameId, 
             userId,
-            activeUsers: activeUsers.length
+            activeUsers: activePlayersCount
           });
 
           console.log(`User ${username} joined game ${gameId}`);
@@ -96,13 +96,13 @@ class SocketManager {
           // Remove from database
           dbManager.removeUser(userId, gameId);
           
-          // Get updated active users count
-          const activeUsers = dbManager.getActiveUsers(gameId);
+          // Get updated active players count (excluding admins)
+          const activePlayersCount = dbManager.getActivePlayersCount(gameId);
           
           // Notify others in the game
           socket.to(`game-${gameId}`).emit('user-left', { 
             userId,
-            activeUsers: activeUsers.length
+            activeUsers: activePlayersCount
           });
 
           console.log(`User ${userId} left game ${gameId}`);
@@ -149,13 +149,13 @@ class SocketManager {
             // Remove user from database
             dbManager.removeUser(userData.userId, userData.gameId);
             
-            // Get updated active users count
-            const activeUsers = dbManager.getActiveUsers(userData.gameId);
+            // Get updated active players count (excluding admins)
+            const activePlayersCount = dbManager.getActivePlayersCount(userData.gameId);
             
             // Notify others in the game
             socket.to(`game-${userData.gameId}`).emit('user-left', { 
               userId: userData.userId,
-              activeUsers: activeUsers.length
+              activeUsers: activePlayersCount
             });
 
             console.log(`User ${userData.username} disconnected from game ${userData.gameId}`);

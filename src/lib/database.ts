@@ -317,6 +317,18 @@ export class DatabaseManager {
     }));
   }
 
+  getActivePlayersCount(gameId: string): number {
+    const stmt = this.db.prepare(`
+      SELECT COUNT(*) as count FROM users 
+      WHERE game_id = ? 
+        AND datetime(last_heartbeat) > datetime('now', '-30 seconds')
+        AND is_admin = 0
+    `);
+
+    const result = stmt.get(gameId) as { count: number };
+    return result.count;
+  }
+
   cleanupInactiveUsers(): number {
     const stmt = this.db.prepare(`
       DELETE FROM users 
