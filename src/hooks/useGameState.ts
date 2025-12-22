@@ -41,7 +41,11 @@ export function useGameState(gameId: string) {
 				});
 
 				if (response.ok) {
-					setGame(updatedGame);
+					const savedGame = await response.json();
+					if (!savedGame.completedTasks) {
+						savedGame.completedTasks = [];
+					}
+					setGame(savedGame);
 					setError(null);
 				} else {
 					setError("Failed to save game");

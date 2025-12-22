@@ -35,7 +35,11 @@ export async function PUT(
     const success = dbManager.updateGame(game);
     
     if (success) {
-      return NextResponse.json({ success: true });
+      const updatedGame = dbManager.getGame(gameId);
+      if (!updatedGame) {
+        return NextResponse.json({ error: 'Game not found after update' }, { status: 404 });
+      }
+      return NextResponse.json(updatedGame);
     } else {
       return NextResponse.json({ error: 'Failed to save game' }, { status: 500 });
     }

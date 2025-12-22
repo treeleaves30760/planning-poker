@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 import path from "path";
-import { Game } from "@/types/game";
+import { Game, Task, Vote } from "@/types/game";
 
 const DB_PATH = path.join(process.cwd(), "data", "games.db");
 let db: Database.Database | null = null;
@@ -105,6 +105,41 @@ export class DatabaseManager {
 
 	constructor() {
 		this.db = getDb();
+	}
+
+	private mergeVotes(
+		existingVotes: Vote[] = [],
+		incomingVotes: Vote[] = []
+	): Vote[] {
+		const voteMap = new Map<string, Vote>();
+
+		for (const vote of existingVotes ?? []) {
+			if (vote?.userId) {
+				voteMap.set(vote.userId, { ...vote });
+			}
+		}
+
+		for (const vote of incomingVotes ?? []) {
+			if (vote?.userId) {
+				voteMap.set(vote.userId, { ...vote });
+			}
+		}
+
+		return Array.from(voteMap.values());
+	}
+
+	private mergeTaskWithExisting(task: Task, existing?: Task | null): Task {
+		if (!existing) {
+			return {
+				...task,
+				votes: [...(task.votes ?? [])],
+			};
+		}
+
+		return {
+			...task,
+			votes: this.mergeVotes(existing.votes ?? [], task.votes ?? []),
+		};
 	}
 
 	// Game operations
@@ -277,6 +312,43 @@ export class DatabaseManager {
 
 	updateGame(game: Game): boolean {
 		const transaction = this.db.transaction(() => {
+			// Read the latest game state inside the transaction to prevent race conditions
+			const existingGame = this.getGame(game.id);
+
+			const findExistingTask = (taskId: string): Task | undefined => {
+				if (!existingGame) return undefined;
+
+				if (existingGame.currentTask && existingGame.currentTask.id === taskId) {
+					return existingGame.currentTask;
+				}
+
+				return (
+					existingGame.tasks.find((t) => t.id === taskId) ||
+					existingGame.completedTasks.find((t) => t.id === taskId)
+				);
+			};
+
+			const mergedCurrentTask = game.currentTask
+				? this.mergeTaskWithExisting(
+						game.currentTask,
+						findExistingTask(game.currentTask.id)
+				  )
+				: null;
+
+			const mergedTasks = game.tasks.map((task) =>
+				this.mergeTaskWithExisting(task, findExistingTask(task.id))
+			);
+
+			const mergedCompletedTasks = (game.completedTasks || []).map((task) =>
+				this.mergeTaskWithExisting(task, findExistingTask(task.id))
+			);
+
+			const gameToPersist: Game = {
+				...game,
+				currentTask: mergedCurrentTask,
+				tasks: mergedTasks,
+				completedTasks: mergedCompletedTasks,
+			};
 			// Update game
 			const gameStmt = this.db.prepare(`
         UPDATE games 
@@ -286,13 +358,15 @@ export class DatabaseManager {
       `);
 
 			gameStmt.run(
-				game.name,
-				game.adminId,
-				game.adminPassword,
-				JSON.stringify(game.scoreConfig),
-				game.currentTask ? JSON.stringify(game.currentTask) : null,
-				game.isActive ? 1 : 0,
-				game.id
+				gameToPersist.name,
+				gameToPersist.adminId,
+				gameToPersist.adminPassword,
+				JSON.stringify(gameToPersist.scoreConfig),
+				gameToPersist.currentTask
+					? JSON.stringify(gameToPersist.currentTask)
+					: null,
+				gameToPersist.isActive ? 1 : 0,
+				gameToPersist.id
 			);
 
 			// Update or insert tasks
@@ -303,10 +377,10 @@ export class DatabaseManager {
       `);
 
 			// Handle regular tasks
-			for (const task of game.tasks) {
+			for (const task of gameToPersist.tasks) {
 				upsertTaskStmt.run(
 					task.id,
-					game.id,
+					gameToPersist.id,
 					task.description,
 					JSON.stringify(task.votes),
 					task.revealed ? 1 : 0,
@@ -321,10 +395,10 @@ export class DatabaseManager {
 			}
 
 			// Handle completed tasks
-			for (const task of game.completedTasks || []) {
+			for (const task of gameToPersist.completedTasks || []) {
 				upsertTaskStmt.run(
 					task.id,
-					game.id,
+					gameToPersist.id,
 					task.description,
 					JSON.stringify(task.votes),
 					task.revealed ? 1 : 0,
@@ -342,7 +416,7 @@ export class DatabaseManager {
 			const clearQueueStmt = this.db.prepare(
 				`DELETE FROM task_queue WHERE game_id = ?`
 			);
-			clearQueueStmt.run(game.id);
+			clearQueueStmt.run(gameToPersist.id);
 
 			// Insert new queue items
 			const insertQueueStmt = this.db.prepare(`
@@ -350,9 +424,9 @@ export class DatabaseManager {
         VALUES (?, ?, ?, ?)
       `);
 
-			for (let i = 0; i < (game.taskQueue || []).length; i++) {
-				const task = game.taskQueue[i];
-				insertQueueStmt.run(task.id, game.id, task.description, i);
+			for (let i = 0; i < (gameToPersist.taskQueue || []).length; i++) {
+				const task = gameToPersist.taskQueue[i];
+				insertQueueStmt.run(task.id, gameToPersist.id, task.description, i);
 			}
 		});
 
