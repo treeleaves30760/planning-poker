@@ -36,6 +36,7 @@ function initializeSchema(database: Database.Database) {
       game_id TEXT NOT NULL,
       username TEXT NOT NULL,
       is_admin BOOLEAN DEFAULT 0,
+      status TEXT DEFAULT 'active',
       last_heartbeat DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id, game_id),
       FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
@@ -90,6 +91,13 @@ function initializeSchema(database: Database.Database) {
 	} catch {
 		// Column already exists, ignore error
 	}
+
+	// Migration: Add status column to users if it doesn't exist
+	try {
+		database.exec(`ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'`);
+	} catch {
+		// Column already exists, ignore error
+	}
 }
 
 export interface UserConnection {
@@ -97,6 +105,7 @@ export interface UserConnection {
 	gameId: string;
 	username: string;
 	isAdmin: boolean;
+	status: "active" | "away";
 	lastHeartbeat: Date;
 }
 
@@ -201,16 +210,28 @@ export class DatabaseManager {
 
 		if (!gameRow) return null;
 
-		// Get active users (heartbeat within last 30 seconds)
+		// Get all users for this game
+		// First, auto-update status based on heartbeat time
+		this.db.prepare(`
+      UPDATE users
+      SET status = CASE
+        WHEN datetime(last_heartbeat) > datetime('now', '-30 seconds') THEN 'active'
+        ELSE 'away'
+      END
+      WHERE game_id = ?
+    `).run(gameId);
+
+		// Then get all users
 		const usersStmt = this.db.prepare(`
-      SELECT * FROM users 
-      WHERE game_id = ? AND datetime(last_heartbeat) > datetime('now', '-30 seconds')
+      SELECT * FROM users
+      WHERE game_id = ?
     `);
 		const userRows = usersStmt.all(gameId) as {
 			id: string;
 			game_id: string;
 			username: string;
 			is_admin: number;
+			status: string;
 			last_heartbeat: string;
 		}[];
 
@@ -277,6 +298,7 @@ export class DatabaseManager {
 				id: row.id,
 				username: row.username,
 				isAdmin: row.is_admin === 1,
+				status: (row.status as "active" | "away") || "active",
 			})),
 			tasks: taskRows.map((row) => ({
 				id: row.id,
@@ -447,8 +469,8 @@ export class DatabaseManager {
 		isAdmin: boolean = false
 	): boolean {
 		const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO users (id, game_id, username, is_admin, last_heartbeat)
-      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      INSERT OR REPLACE INTO users (id, game_id, username, is_admin, status, last_heartbeat)
+      VALUES (?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)
     `);
 
 		try {
@@ -475,9 +497,20 @@ export class DatabaseManager {
 	}
 
 	getActiveUsers(gameId: string): UserConnection[] {
+		// Auto-update status based on heartbeat time
+		this.db.prepare(`
+      UPDATE users
+      SET status = CASE
+        WHEN datetime(last_heartbeat) > datetime('now', '-30 seconds') THEN 'active'
+        ELSE 'away'
+      END
+      WHERE game_id = ?
+    `).run(gameId);
+
+		// Get all users (including away users)
 		const stmt = this.db.prepare(`
-      SELECT * FROM users 
-      WHERE game_id = ? AND datetime(last_heartbeat) > datetime('now', '-30 seconds')
+      SELECT * FROM users
+      WHERE game_id = ?
       ORDER BY username
     `);
 
@@ -486,6 +519,7 @@ export class DatabaseManager {
 			game_id: string;
 			username: string;
 			is_admin: number;
+			status: string;
 			last_heartbeat: string;
 		}[];
 		return rows.map((row) => ({
@@ -493,6 +527,7 @@ export class DatabaseManager {
 			gameId: row.game_id,
 			username: row.username,
 			isAdmin: row.is_admin === 1,
+			status: (row.status as "active" | "away") || "active",
 			lastHeartbeat: new Date(row.last_heartbeat),
 		}));
 	}

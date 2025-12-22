@@ -21,10 +21,13 @@ export interface ScoreConfig {
 	};
 }
 
+export type UserStatus = "active" | "away";
+
 export interface User {
 	id: string;
 	username: string;
 	isAdmin: boolean;
+	status?: UserStatus; // active = online, away = temporarily disconnected
 }
 
 export interface Vote {

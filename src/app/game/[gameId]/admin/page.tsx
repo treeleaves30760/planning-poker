@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Task, Vote } from "@/types/game";
 import { useGameState } from "@/hooks/useGameState";
 import { useSocket } from "@/hooks/useSocket";
-import { getScoreForVote } from "@/utils/scoreCalculation";
+import { getScoreForVote, getModeScore } from "@/utils/scoreCalculation";
 import TaskImport from "@/components/admin/TaskImport";
 import TaskQueue from "@/components/admin/TaskQueue";
 
@@ -577,9 +577,18 @@ export default function AdminGamePage() {
 										key={user.id}
 										className="flex items-center justify-between p-2 bg-gray-50 rounded"
 									>
-										<span className="font-medium">{user.username}</span>
-										<span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
-											Player
+										<div className="flex items-center gap-2">
+											<div className={`w-2 h-2 rounded-full ${
+												user.status === "away" ? "bg-yellow-400" : "bg-green-400"
+											}`}></div>
+											<span className="font-medium">{user.username}</span>
+										</div>
+										<span className={`px-2 py-1 rounded text-xs ${
+											user.status === "away"
+												? "bg-yellow-100 text-yellow-800"
+												: "bg-blue-100 text-blue-800"
+										}`}>
+											{user.status === "away" ? "Away" : "Online"}
 										</span>
 									</div>
 								))}
@@ -678,54 +687,62 @@ export default function AdminGamePage() {
 								</table>
 
 								{/* Final Score Setting */}
-								{game.currentTask?.revealed && (
-									<div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-										<h4 className="font-semibold text-yellow-800 mb-2">
-											Set Final Score
-										</h4>
-										<div className="flex items-center gap-2">
-											<input
-												type="number"
-												step="0.1"
-												placeholder="Final score..."
-												defaultValue={game.currentTask.finalScore || ""}
-												className="px-3 py-1 border border-gray-300 rounded text-sm w-32 text-gray-900"
-												onKeyPress={(e) => {
-													if (e.key === "Enter") {
-														const value = parseFloat(
-															(e.target as HTMLInputElement).value
-														);
+								{game.currentTask?.revealed && (() => {
+									const modeScore = getModeScore(game.currentTask.votes, game.scoreConfig);
+									const defaultScore = game.currentTask.finalScore ?? modeScore ?? "";
+
+									return (
+										<div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+											<h4 className="font-semibold text-yellow-800 mb-2">
+												Set Final Score
+											</h4>
+											<p className="text-xs text-yellow-700 mb-2">
+												Most common score: {modeScore ?? "N/A"}
+											</p>
+											<div className="flex items-center gap-2">
+												<input
+													type="number"
+													step="0.1"
+													placeholder="Final score..."
+													defaultValue={defaultScore}
+													className="px-3 py-1 border border-gray-300 rounded text-sm w-32 text-gray-900"
+													onKeyPress={(e) => {
+														if (e.key === "Enter") {
+															const value = parseFloat(
+																(e.target as HTMLInputElement).value
+															);
+															if (!isNaN(value)) {
+																setFinalScore(game.currentTask!.id, value);
+															}
+														}
+													}}
+												/>
+												<button
+													onClick={(e) => {
+														const input = (
+															e.target as HTMLElement
+														).parentElement?.querySelector(
+															"input"
+														) as HTMLInputElement;
+														const value = parseFloat(input.value);
 														if (!isNaN(value)) {
 															setFinalScore(game.currentTask!.id, value);
 														}
-													}
-												}}
-											/>
-											<button
-												onClick={(e) => {
-													const input = (
-														e.target as HTMLElement
-													).parentElement?.querySelector(
-														"input"
-													) as HTMLInputElement;
-													const value = parseFloat(input.value);
-													if (!isNaN(value)) {
-														setFinalScore(game.currentTask!.id, value);
-													}
-												}}
-												className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
-											>
-												Set
-											</button>
-											{game.currentTask.finalScore && (
-												<span className="text-sm text-gray-600">
-													Current:{" "}
-													<strong>{game.currentTask.finalScore}</strong>
-												</span>
-											)}
+													}}
+													className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
+												>
+													Set
+												</button>
+												{game.currentTask.finalScore && (
+													<span className="text-sm text-gray-600">
+														Current:{" "}
+														<strong>{game.currentTask.finalScore}</strong>
+													</span>
+												)}
+											</div>
 										</div>
-									</div>
-								)}
+									);
+								})()}
 							</div>
 						)}
 					</div>
@@ -859,46 +876,56 @@ export default function AdminGamePage() {
 											</div>
 
 											{/* Final Score Setting for Completed Tasks */}
-											<div className="mt-3 p-2 bg-gray-100 rounded">
-												<h5 className="text-sm font-semibold text-gray-700 mb-1">
-													Set Final Score
-												</h5>
-												<div className="flex items-center gap-2">
-													<input
-														type="number"
-														step="0.1"
-														placeholder="Final score..."
-														defaultValue={task.finalScore || ""}
-														className="px-2 py-1 border border-gray-300 rounded text-xs w-24 text-gray-900"
-														onKeyPress={(e) => {
-															if (e.key === "Enter") {
-																const value = parseFloat(
-																	(e.target as HTMLInputElement).value
-																);
-																if (!isNaN(value)) {
-																	setFinalScore(task.id, value);
-																}
-															}
-														}}
-													/>
-													<button
-														onClick={(e) => {
-															const input = (
-																e.target as HTMLElement
-															).parentElement?.querySelector(
-																"input"
-															) as HTMLInputElement;
-															const value = parseFloat(input.value);
-															if (!isNaN(value)) {
-																setFinalScore(task.id, value);
-															}
-														}}
-														className="px-2 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700"
-													>
-														Set
-													</button>
-												</div>
-											</div>
+											{(() => {
+												const modeScore = getModeScore(task.votes, game.scoreConfig);
+												const defaultScore = task.finalScore ?? modeScore ?? "";
+
+												return (
+													<div className="mt-3 p-2 bg-gray-100 rounded">
+														<h5 className="text-sm font-semibold text-gray-700 mb-1">
+															Set Final Score
+														</h5>
+														<p className="text-xs text-gray-600 mb-1">
+															Most common score: {modeScore ?? "N/A"}
+														</p>
+														<div className="flex items-center gap-2">
+															<input
+																type="number"
+																step="0.1"
+																placeholder="Final score..."
+																defaultValue={defaultScore}
+																className="px-2 py-1 border border-gray-300 rounded text-xs w-24 text-gray-900"
+																onKeyPress={(e) => {
+																	if (e.key === "Enter") {
+																		const value = parseFloat(
+																			(e.target as HTMLInputElement).value
+																		);
+																		if (!isNaN(value)) {
+																			setFinalScore(task.id, value);
+																		}
+																	}
+																}}
+															/>
+															<button
+																onClick={(e) => {
+																	const input = (
+																		e.target as HTMLElement
+																	).parentElement?.querySelector(
+																		"input"
+																	) as HTMLInputElement;
+																	const value = parseFloat(input.value);
+																	if (!isNaN(value)) {
+																		setFinalScore(task.id, value);
+																	}
+																}}
+																className="px-2 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700"
+															>
+																Set
+															</button>
+														</div>
+													</div>
+												);
+											})()}
 										</div>
 									)}
 								</div>

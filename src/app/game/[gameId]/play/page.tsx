@@ -235,18 +235,44 @@ export default function PlayGamePage() {
 			
 			<div className="max-w-4xl mx-auto px-4">
 				<div className="mb-6">
-					<h1 className="text-3xl font-bold text-gray-900">{game.name}</h1>
-					<p className="text-gray-600">Welcome, {username}!</p>
-					<div className="flex items-center gap-4 text-gray-600">
-						<span>Players: {activeUsers}</span>
-						<span className={`inline-flex items-center gap-1 text-sm ${
-							isConnected ? 'text-green-600' : 'text-red-600'
-						}`}>
-							<div className={`w-2 h-2 rounded-full ${
-								isConnected ? 'bg-green-400' : 'bg-red-400'
-							}`}></div>
-							{isConnected ? 'Connected' : 'Reconnecting...'}
-						</span>
+					<div className="flex items-start justify-between">
+						<div>
+							<h1 className="text-3xl font-bold text-gray-900">{game.name}</h1>
+							<p className="text-gray-600">Welcome, {username}!</p>
+							<div className="flex items-center gap-4 text-gray-600">
+								<span>Players: {activeUsers}</span>
+								<span className={`inline-flex items-center gap-1 text-sm ${
+									isConnected ? 'text-green-600' : 'text-red-600'
+								}`}>
+									<div className={`w-2 h-2 rounded-full ${
+										isConnected ? 'bg-green-400' : 'bg-red-400'
+									}`}></div>
+									{isConnected ? 'Connected' : 'Reconnecting...'}
+								</span>
+							</div>
+						</div>
+						<button
+							onClick={() => {
+								if (confirm('Are you sure you want to leave this game?')) {
+									// Remove user from database
+									if (userId) {
+										fetch(`/api/games/${gameId}/leave`, {
+											method: 'POST',
+											headers: { 'Content-Type': 'application/json' },
+											body: JSON.stringify({ userId })
+										});
+									}
+									// Clear local storage
+									localStorage.removeItem('currentUserId');
+									localStorage.removeItem('currentUsername');
+									// Redirect to join page
+									router.push(`/game/${gameId}/join`);
+								}
+							}}
+							className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium"
+						>
+							Leave Game
+						</button>
 					</div>
 				</div>
 

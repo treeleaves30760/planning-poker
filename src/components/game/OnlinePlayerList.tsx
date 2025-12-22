@@ -64,7 +64,9 @@ export default function OnlinePlayerList({ users, currentUserId }: OnlinePlayerL
 										}`}
 									>
 										{/* Status indicator */}
-										<div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+										<div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+											user.status === "away" ? "bg-yellow-400" : "bg-green-400"
+										}`}></div>
 										
 										{/* Username */}
 										<span className="truncate flex-1">
