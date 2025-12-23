@@ -28,7 +28,7 @@ export default function VotingResultsTable({
 		);
 	}
 
-	const modeScore = getModeScore(task.votes, scoreConfig);
+	const modeScore = getModeScore(task.votes, scoreConfig) ?? null;
 
 	return (
 		<div className="mt-6 bg-white rounded-lg shadow-md p-6 text-gray-900">

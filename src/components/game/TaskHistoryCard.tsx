@@ -76,7 +76,7 @@ export default function TaskHistoryCard({
 
 			<div className="space-y-4">
 				{completedTasks.map((task, index) => {
-					const modeScore = getModeScore(task.votes, scoreConfig);
+					const modeScore = getModeScore(task.votes, scoreConfig) ?? null;
 					const taskAvgScore =
 						task.votes.length > 0
 							? Math.round(
