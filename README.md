@@ -21,7 +21,7 @@ A collaborative task difficulty estimation tool for agile teams. Planning Poker 
 1. **Pull and run the Docker image:**
 
 ```bash
-docker run -p 3000:3000 ghcr.io/treeleaves30760/planning-poker:main
+docker run -p 3000:3000 -p 3001:3001 ghcr.io/treeleaves30760/planning-poker:main
 ```
 
 2. **Open your browser:**
@@ -111,17 +111,17 @@ Built with modern web technologies:
 docker build -t story-point-party .
 
 # Run the container
-docker run -p 3000:3000 story-point-party
+docker run -p 3000:3000 -p 3001:3001 story-point-party
 ```
 
 ### Using Pre-built Image
 
 ```bash
 # Pull and run from GitHub Container Registry
-docker run -p 3000:3000 ghcr.io/[username]/story-point-party:latest
+docker run -p 3000:3000 -p 3001:3001 ghcr.io/[username]/story-point-party:latest
 
-# Or run with custom port
-docker run -p 8080:3000 ghcr.io/[username]/story-point-party:latest
+# Or run with custom ports
+docker run -p 8080:3000 -p 8081:3001 ghcr.io/[username]/story-point-party:latest
 ```
 
 ### Docker Compose (Optional)
@@ -134,7 +134,8 @@ services:
   story-point-party:
     image: ghcr.io/[username]/story-point-party:latest
     ports:
-      - "3000:3000"
+      - "3000:3000"  # Next.js web server
+      - "3001:3001"  # Socket.io server for real-time features
     volumes:
       - ./data:/app/data  # Persist game data
 ```
@@ -155,7 +156,7 @@ npm install          # Install dependencies
 
 # Docker
 docker build -t story-point-party .  # Build Docker image
-docker run -p 3000:3000 story-point-party  # Run container
+docker run -p 3000:3000 -p 3001:3001 story-point-party  # Run container
 ```
 
 ## Project Structure

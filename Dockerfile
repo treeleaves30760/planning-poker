@@ -20,7 +20,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:22-alpine AS production
 
 # Install runtime dependencies and build tools for better-sqlite3
 RUN apk add --no-cache python3 make g++ && \
@@ -47,8 +47,8 @@ RUN apk del make g++ && \
 # Create data directory for game storage
 RUN mkdir -p data/games
 
-# Expose port 3000
-EXPOSE 3000
+# Expose ports for Next.js (3000) and Socket.io (3001)
+EXPOSE 3000 3001
 
 # Set environment to production
 ENV NODE_ENV=production
